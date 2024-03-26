@@ -12,15 +12,15 @@ import {
     CInput,
     CInputGroupText,
     CCardGroup,
-    CFormGroup,
-    CLabel,
+    // CFormGroup,
+    // CLabel,
     CSelect,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
 import swal from 'sweetalert';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import CIcon from '@coreui/icons-react'
+// import CIcon from '@coreui/icons-react'
 
 const AddMatkul = () => {
     const token = localStorage.getItem('token');
@@ -30,6 +30,8 @@ const AddMatkul = () => {
 
     const [data, setData] = useState([])
 
+    const [OneDosen, setOneDosen] = useState('')
+
     const history = useHistory();
 
     const createMatkul = (event) => {
@@ -37,7 +39,7 @@ const AddMatkul = () => {
 
         handleChange(event);
 
-        console.log(data);
+        // console.log(data);
 
         api
             .post('/matkul',
@@ -63,7 +65,7 @@ const AddMatkul = () => {
     const handleChange = (event) => {
         setDosen(dosen => ({
             ...data,
-            dosen_id: event.target.value
+            dosen_id: event.target.value,
         }));
     }
 
@@ -82,9 +84,51 @@ const AddMatkul = () => {
             })
     }
 
+    const getDosen = () => {
+        api
+            .get(`/dosen/${dosen.dosen_id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+            })
+            .then(response => {
+                setOneDosen(response.data.dosen)
+                // console.log(response);
+            })
+            .catch(error => {
+                console.log(error);
+            })
+    }
+
     useEffect(() => {
         getDataDosen();
     }, [])
+
+    useEffect(() => {
+        getDosen()
+    }, [dosen.dosen_id])
+
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: "Confirm create for a new course!",
+            text: `Course Name: ${name}\nLecturer: ${OneDosen.dosen_name}`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    createMatkul(event)
+                } else {
+                    await swal("Create Course Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
 
     return (
         <div>
@@ -94,10 +138,10 @@ const AddMatkul = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
+                                    <CCol md="10" xs="9">
                                         <h2>Add Course</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" xs="3" className="text-right">
                                         <CLink to={{ pathname: "/course/course-list" }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>
@@ -107,7 +151,7 @@ const AddMatkul = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => createMatkul(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
                                     <CRow>
                                         <CInputGroup className="mb-3">
@@ -128,7 +172,7 @@ const AddMatkul = () => {
                                     <CRow>
                                         <CInputGroup className="mb-3">
                                             <CCol md="2">
-                                                <CInputGroupText>Dosen Name</CInputGroupText>
+                                                <CInputGroupText>Lecturer's Name</CInputGroupText>
                                             </CCol>
                                             <CCol xs="12" md="9">
                                                 <CSelect custom name="select" id="select" onChange={(event) => handleChange(event)}>
@@ -147,7 +191,7 @@ const AddMatkul = () => {
 
                                     <CRow className="text-center">
                                         <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
+                                            <CButton color="success" className="px-4" type="submit">
                                                 Create
                                             </CButton>
                                         </CCol>

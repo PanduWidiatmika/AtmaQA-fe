@@ -11,19 +11,21 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
     CDataTable,
     CTooltip,
-
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
 import CIcon from '@coreui/icons-react'
 import { freeSet } from '@coreui/icons'
-import swal from 'sweetalert';
-import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
+import { useParams } from "react-router-dom/cjs/react-router-dom.min";
+import './detailContainer.css'
+import '../../../scss/_variables.scss'
 
 const EnrollClassWeek = () => {
     const token = localStorage.getItem('token');
@@ -37,6 +39,8 @@ const EnrollClassWeek = () => {
     const [week, setWeek] = useState([])
 
     const { classid } = useParams();
+
+    const [loading, setLoading] = useState(true)
 
 
     useEffect(() => {
@@ -52,6 +56,7 @@ const EnrollClassWeek = () => {
                 .then(response => {
                     setData(response.data.kelas)
                     setWeek(response.data.week)
+                    setLoading(false)
                 })
                 .catch(error => {
                     console.log(error);
@@ -62,139 +67,174 @@ const EnrollClassWeek = () => {
     }, [classid])
 
     return (
-        <div>
-            <CRow className="justify-content-center">
-                <CCol>
-                    <CCardGroup>
-                        <CCard>
-                            <CCardHeader>
-                                <CRow>
-                                    <CCol md="10">
-                                        <h2>Class Detail</h2>
-                                    </CCol>
-                                    <CCol md="2" className="text-right">
-                                        <CLink to={{ pathname: "/class/student-class-list" }}>
-                                            <CButton color="danger">Back</CButton>
-                                        </CLink>
-                                    </CCol>
-                                </CRow>
-                            </CCardHeader>
+        <>
+            {
+                loading
+                    ?
+                    <h1>Loading...</h1>
+                    :
+                    <div>
+                        <CRow className="justify-content-center">
+                            <CCol>
+                                <CCardGroup>
+                                    <CCard>
+                                        <CCardHeader>
+                                            <CRow>
+                                                <CCol md="10" xs="9">
+                                                    <h2>Class Detail</h2>
+                                                </CCol>
+                                                <CCol md="2" xs="3" className="text-right">
+                                                    <CLink to={{ pathname: "/class/student-class-list" }}>
+                                                        <CButton color="danger">Back</CButton>
+                                                    </CLink>
+                                                </CCol>
+                                            </CRow>
+                                        </CCardHeader>
 
-                            <CCardBody>
-                                <CForm method="post">
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Class Name</CInputGroupText>
-                                            </CCol>
-                                            <CCol>
-                                                <CInput
-                                                    type="text"
-                                                    placeholder="Alexa"
-                                                    disabled
-                                                    defaultValue={data.kelas_name}
-                                                ></CInput>
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
+                                        <CCardBody>
+                                            <CForm method="post">
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Class Name</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol>
+                                                            <CInput
+                                                                type="text"
+                                                                placeholder="Alexa"
+                                                                disabled
+                                                                defaultValue={data.kelas_name}
+                                                            ></CInput>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
 
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Course</CInputGroupText>
-                                            </CCol>
-                                            <CCol>
-                                                <CInput
-                                                    type="text"
-                                                    placeholder="Course Name"
-                                                    disabled
-                                                    defaultValue={data.matkul_name}
-                                                ></CInput>
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Course</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol>
+                                                            <CInput
+                                                                type="text"
+                                                                placeholder="Course Name"
+                                                                disabled
+                                                                defaultValue={data.matkul_name}
+                                                            ></CInput>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
 
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Lecture Name</CInputGroupText>
-                                            </CCol>
-                                            <CCol>
-                                                <CInput
-                                                    type="text"
-                                                    placeholder="Lecture Name"
-                                                    disabled
-                                                    defaultValue={data.dosen_name}
-                                                ></CInput>
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Lecture Name</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol>
+                                                            <CInput
+                                                                type="text"
+                                                                placeholder="Lecture Name"
+                                                                disabled
+                                                                defaultValue={data.dosen_name}
+                                                            ></CInput>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
 
-                                </CForm>
-                                <CCardHeader>
-                                    <CRow>
-                                        <CCol md="10">
-                                            <h2>Weeks</h2>
-                                        </CCol>
-                                        {/* <CCol md="2" className="text-right">
-                                            <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/open-class` }}>
-                                                <CButton color="primary">Open Class</CButton>
-                                            </CLink>
-                                        </CCol> */}
-                                    </CRow>
-                                </CCardHeader>
-                                <CCardBody>
-                                    {
-                                        data == null ?
-                                            <div>
-                                                No Data Found
-                                            </div>
+                                            </CForm>
 
-                                            :
-                                            <CDataTable
-                                                items={week}
-                                                fields={[
-                                                    { key: "No" },
-                                                    { key: "Week" },
-                                                    // { key: "Class_Status" },
-                                                    { key: "Action" },
-                                                ]}
-                                                hover
-                                                bordered
-                                                size="sm"
-                                                itemsPerPage={4}
-                                                pagination
-                                                scopedSlots={{
-                                                    No: (item, i) => <td>{i + 1}</td>,
-                                                    Week: (item) => <td>Week - {item.minggu_ke}</td>,
-                                                    // Class_Status: (item) => <td>{item.status_kelas}</td>,
-                                                    // Schedule: (item) => <td>{item.hari} - {item.sesi}</td>,
-                                                    'Action':
-                                                        (item) => (
-                                                            <td>
-                                                                <CTooltip
-                                                                    content="Class Detail"
-                                                                    placement="top"
-                                                                >
-                                                                    <CLink
-                                                                        className="card-header-action"
-                                                                        to={{ pathname: `/class/student-class-list/${classid}/${item.minggukelas_id}` }}>
-                                                                        <CIcon content={freeSet.cilNewspaper} />
-                                                                    </CLink>
-                                                                </CTooltip>
-                                                            </td>
-                                                        )
-                                                }}
-                                            />
-                                    }
+                                        </CCardBody>
+                                        <CCardHeader>
+                                            <CRow>
+                                                <CCol md="10">
+                                                    <h3>Weeks</h3>
+                                                </CCol>
+                                            </CRow>
+                                        </CCardHeader>
+                                        <CCardBody>
+                                            {
+                                                data == null ?
+                                                    <div>
+                                                        No Data Found
+                                                    </div>
 
-                                </CCardBody>
-                            </CCardBody>
-                        </CCard>
-                    </CCardGroup>
-                </CCol>
-            </CRow>
-        </div >
+                                                    :
+                                                    <CDataTable
+                                                        items={week}
+                                                        fields={[
+                                                            { key: "No" },
+                                                            { key: "Week" },
+                                                            { key: "Action" },
+                                                        ]}
+                                                        hover
+                                                        bordered
+                                                        size="sm"
+                                                        itemsPerPage={4}
+                                                        pagination
+                                                        scopedSlots={{
+                                                            No: (item, i) => <td>{i + 1}</td>,
+                                                            Week: (item) => <td>Week - {item.minggu_ke}</td>,
+                                                            'Action':
+                                                                (item) => (
+                                                                    <>
+                                                                        <td>
+                                                                            <CDropdown
+
+                                                                                className="c-header-nav-items mx-2"
+                                                                                direction="center"
+                                                                            >
+                                                                                <CDropdownToggle className="c-header-nav-link" caret={false}>
+
+                                                                                    <CTooltip
+                                                                                        content="Details"
+                                                                                        placement="top"
+                                                                                    >
+                                                                                        <CLink
+                                                                                            className="card-header-action"
+                                                                                        >
+                                                                                            <CIcon content={freeSet.cilOptions}
+                                                                                            />
+                                                                                        </CLink>
+                                                                                    </CTooltip>
+
+                                                                                </CDropdownToggle>
+                                                                                <CDropdownMenu className="pt-0"
+                                                                                    placement="left"
+                                                                                >
+                                                                                    <CDropdownItem>
+                                                                                        <CLink
+                                                                                            className="card-header-action"
+                                                                                            to={{ pathname: `/class/student-class-list/${classid}/${item.minggukelas_id}` }}>
+                                                                                            <CIcon content={freeSet.cilNewspaper} className="mfe-2" />
+                                                                                            Class Detail
+                                                                                        </CLink>
+                                                                                    </CDropdownItem>
+                                                                                    <CDropdownItem>
+                                                                                        <CLink
+                                                                                            className="card-header-action"
+                                                                                            to={{ pathname: `/class/student-class-list/${classid}/quiz/${item.minggukelas_id}` }}>
+                                                                                            <CIcon content={freeSet.cilSchool} className="mfe-2" />
+                                                                                            Quiz
+                                                                                        </CLink>
+                                                                                    </CDropdownItem>
+                                                                                </CDropdownMenu>
+                                                                            </CDropdown>
+
+                                                                        </td>
+                                                                    </>
+                                                                )
+                                                        }}
+                                                    />
+                                            }
+
+                                        </CCardBody>
+                                    </CCard>
+                                </CCardGroup>
+                            </CCol>
+                        </CRow>
+                    </div >
+            }
+        </>
     )
 }
 

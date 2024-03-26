@@ -14,7 +14,6 @@ import {
     CCardGroup,
     CDataTable,
     CTooltip,
-    CBadge,
     CDropdown,
     CDropdownToggle,
     CDropdownMenu,
@@ -22,14 +21,12 @@ import {
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
-import swal from 'sweetalert';
 import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
 import CIcon from '@coreui/icons-react'
 import { freeSet } from '@coreui/icons'
-import parse from 'html-react-parser';
 import '../mahasiswa/detailContainer.css'
 
-const PertanyaanMinggu = () => {
+const PertanyaanDsnList = () => {
     const token = localStorage.getItem('token');
 
     const [data, setData] = useState({
@@ -48,11 +45,13 @@ const PertanyaanMinggu = () => {
     const history = useHistory();
 
     const [week, setWeek] = useState([])
-    const [pertanyaan, setPertanyaan] = useState([])
+    const [mahasiswa, setMahasiswa] = useState([])
 
-    const [validation, setValidation] = useState([])
+    const [tipeSoal, setTipeSoal] = useState('')
 
     const [loading, setLoading] = useState(true)
+
+    const [edit, setEdit] = useState(false)
 
     // console.log(weekid);
     // console.log(id);
@@ -91,30 +90,51 @@ const PertanyaanMinggu = () => {
                 })
         }
 
-        const validateQuestion = () => {
-            api.post('/validate-dosen-question', {
-                id: weekid,
+        const showMhs = () => {
+            api.post('/show-mhs', {
+                id: weekid
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             }).then(response => {
-                setValidation(response.data.question)
+                // console.log(response);
+                setMahasiswa(response.data.mhs)
             }).catch(error => {
                 console.log(error);
             })
         }
 
-        const getPertanyaanMhs = () => {
-            api.post('/get-pertanyaan-mhs', {
-                minggukelas_id: weekid,
+        const cekTipeSoal = () => {
+            api.post('/cek-tipe-soal', {
+                id: weekid
             }, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                    Authorization: `Bearer ${token}`
+                }
             }).then(response => {
-                setPertanyaan(response.data.question)
+                // console.log(response);
+                setTipeSoal(response.data.tipe)
                 setLoading(false)
+            }).catch(error => {
+                console.log(error);
+            })
+        }
+
+        const cekJawaban = () => {
+            api.post('/cek-semua-jawab', {
+                id: weekid
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }).then(response => {
+                // console.log(response);
+                if (response.data.success == false) {
+                    setEdit(false);
+                } else {
+                    setEdit(true)
+                }
             }).catch(error => {
                 console.log(error);
             })
@@ -122,81 +142,12 @@ const PertanyaanMinggu = () => {
 
         getData()
         getWeek()
-        validateQuestion()
-        getPertanyaanMhs()
+        showMhs()
+        cekTipeSoal()
+        cekJawaban()
     }, [id])
 
-    const pinQuestion = (id, pty) => {
-        swal({
-            title: "Do you want to pin the following question?",
-            content: {
-                element: 'div',
-                attributes: {
-                    innerHTML: `${pty}`,
-                },
-            },
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        }).then(async (willDelete) => {
-            if (willDelete) {
-                api
-                    .post('/set-shown', { id: id, }, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    })
-                    .then(async response => {
-                        // setData(response.data.mahasiswa)
-                        await swal("Good Job!", "Success!", "success");
-                        window.location.reload();
-                    })
-                    .catch(error => {
-                        swal("Oops", "Something went wrong", "warning");
-                    })
-            } else {
-                await swal("Action cancelled!");
-                // window.location.reload();
-            }
-        });
-    }
-
-    const unpinQuestion = (id, pty) => {
-        swal({
-            title: "Do you want to unpin the following question?",
-            content: {
-                element: 'div',
-                attributes: {
-                    innerHTML: `${pty}`,
-                },
-            },
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        }).then(async (willDelete) => {
-            if (willDelete) {
-                api
-                    .post('/set-shown', { id: id, }, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    })
-                    .then(async response => {
-                        // setData(response.data.mahasiswa)
-                        await swal("Good Job!", "Success!", "success");
-                        window.location.reload();
-                    })
-                    .catch(error => {
-                        swal("Oops", "Something went wrong", "warning");
-                    })
-            } else {
-                await swal("Action cancelled!");
-                // window.location.reload();
-            }
-        });
-    }
-
-    // console.log(validation);
+    // console.log(week);
 
     return (
         <>
@@ -212,11 +163,11 @@ const PertanyaanMinggu = () => {
                                     <CCard>
                                         <CCardHeader>
                                             <CRow>
-                                                <CCol md="10" xs="6">
-                                                    <h2>Week {week.week}</h2>
+                                                <CCol md="10" xs="9">
+                                                    <h2>Answers List</h2>
                                                 </CCol>
-                                                <CCol md="2" xs="6" className="text-right">
-                                                    <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}` }}>
+                                                <CCol md="2" xs="3" className="text-right">
+                                                    <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}` }}>
                                                         <CButton color="danger">Back</CButton>
                                                     </CLink>
                                                 </CCol>
@@ -240,62 +191,90 @@ const PertanyaanMinggu = () => {
                                                         </CCol>
                                                     </CInputGroup>
                                                 </CRow>
-
-                                                <CRow>
-                                                    <CInputGroup className="mb-3">
-                                                        <CCol md="2">
-                                                            <CInputGroupText>Status</CInputGroupText>
-                                                        </CCol>
-                                                        <CCol>
-                                                            <CInput
-                                                                type="text"
-                                                                placeholder="Session"
-                                                                disabled
-                                                                defaultValue={week.class_status}
-                                                            ></CInput>
-                                                        </CCol>
-                                                    </CInputGroup>
-                                                </CRow>
                                             </CForm>
 
 
                                         </CCardBody>
                                         <CCardHeader>
                                             <CRow>
-                                                <CCol md="8" xs="7">
-                                                    <h3>Questions</h3>
+                                                <CCol md="8" xs="8">
+                                                    <h3>Student List</h3>
                                                 </CCol>
-                                                <CCol md="4" xs="5" className="text-right">
-                                                    {
-                                                        validation == null
-                                                            ?
-                                                            <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/add-question` }}>
-                                                                <CButton color="primary">Add Question</CButton>
-                                                            </CLink>
-                                                            :
-                                                            <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/question-list` }}>
-                                                                <CButton color="primary">View Answers</CButton>
-                                                            </CLink>
-                                                    }
+                                                <CCol md="4" xs="4" className="text-right">
+                                                    <CRow>
+                                                        {
+                                                            edit == false
+                                                                ?
+                                                                <CCol>
+                                                                    <CLink
+                                                                        to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/view-lecture-question` }}
+                                                                    >
+                                                                        <CTooltip
+                                                                            content="View Questions"
+                                                                            placement="top">
+                                                                            <CButton
+                                                                                // color="info"
+                                                                                style={{ backgroundColor: "#3c4b64" }}
+                                                                            ><CIcon content={freeSet.cilNewspaper}
+                                                                                style={{ color: "white" }}
+                                                                                /></CButton>
+                                                                        </CTooltip>
+                                                                    </CLink>
+                                                                </CCol>
+                                                                :
+                                                                <>
+                                                                    <CCol style={{ paddingRight: 0 }}>
+                                                                        <CLink
+                                                                            to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/view-lecture-question` }}
+                                                                        >
+                                                                            <CTooltip
+                                                                                content="View Questions"
+                                                                                placement="top">
+                                                                                <CButton
+                                                                                    // color="info"
+                                                                                    style={{ backgroundColor: "#3c4b64" }}
+                                                                                ><CIcon content={freeSet.cilNewspaper}
+                                                                                    style={{ color: "white" }}
+                                                                                    /></CButton>
+                                                                            </CTooltip>
+                                                                        </CLink>
+                                                                    </CCol>
+                                                                    <CCol md="3" xs="7" className="text-right" style={{ paddingLeft: "15px" }}>
+                                                                        <CLink
+                                                                            to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/edit-question` }}
+                                                                        >
+                                                                            <CTooltip
+                                                                                content="Edit Questions"
+                                                                                placement="top">
+                                                                                <CButton
+                                                                                    // color="info"
+                                                                                    style={{ backgroundColor: "#3c4b64" }}
+                                                                                ><CIcon content={freeSet.cilPencil}
+                                                                                    style={{ color: "white" }}
+                                                                                    /></CButton>
+                                                                            </CTooltip>
+                                                                        </CLink>
+                                                                    </CCol>
+                                                                </>
+                                                        }
 
+                                                    </CRow>
                                                 </CCol>
                                             </CRow>
                                         </CCardHeader>
                                         <CCardBody>
                                             {
-                                                pertanyaan == null ?
+                                                mahasiswa == null ?
                                                     <div>
                                                         No Data Found
                                                     </div>
                                                     :
                                                     // <>a</>
                                                     <CDataTable
-                                                        items={pertanyaan}
+                                                        items={mahasiswa}
                                                         fields={[
                                                             { key: "No" },
-                                                            { key: "NPM" },
-                                                            { key: "Question" },
-                                                            { key: 'Status' },
+                                                            { key: "npm" },
                                                             { key: "Action" },
                                                         ]}
                                                         hover
@@ -305,17 +284,6 @@ const PertanyaanMinggu = () => {
                                                         pagination
                                                         scopedSlots={{
                                                             No: (item, i) => <td>{i + 1}</td>,
-                                                            NPM: (item) => <td> {item.npm} </td>,
-                                                            Question: (item) => <td>
-                                                                {
-                                                                    // item.question.length > 25 ? `${item.question.substring(0, 25)}...`
-                                                                    //     :
-                                                                    parse(item.question)
-                                                                }
-                                                            </td>,
-                                                            Status: (item) => <td>{
-                                                                item.jawaban_dosen == null ? <CBadge color="danger">Unanswered</CBadge> : <CBadge color="success">Answered</CBadge>
-                                                            }</td>,
                                                             'Action':
                                                                 (item) => (
                                                                     <td>
@@ -345,47 +313,24 @@ const PertanyaanMinggu = () => {
                                                                                 <CDropdownItem>
                                                                                     <CLink
                                                                                         className="card-header-action"
-                                                                                        to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/question-detail/${item.pertanyaanmhs_id}` }}>
+                                                                                        to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/view-student-answer/${item.mahasiswa_id}` }}>
                                                                                         <CIcon content={freeSet.cilNewspaper} className="mfe-2" />
-                                                                                        Question detail
+                                                                                        View Answers
                                                                                     </CLink>
                                                                                 </CDropdownItem>
 
                                                                                 {
-                                                                                    item.jawaban_dosen == null ?
+                                                                                    tipeSoal == "Essay" ?
                                                                                         <CDropdownItem>
                                                                                             <CLink
                                                                                                 className="card-header-action"
-                                                                                                to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/answer-question/${item.pertanyaanmhs_id}` }}>
+                                                                                                to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}/answer-correction/${item.mahasiswa_id}` }}>
                                                                                                 <CIcon content={freeSet.cilPencil} className="mfe-2" />
-                                                                                                Answer Question
+                                                                                                Mark Answers
                                                                                             </CLink>
                                                                                         </CDropdownItem>
                                                                                         :
                                                                                         <></>
-                                                                                }
-
-                                                                                {
-                                                                                    item.status_pertanyaan == 'not shown' ?
-                                                                                        <CDropdownItem>
-                                                                                            <CLink
-                                                                                                className="card-header-action"
-                                                                                                onClick={() => pinQuestion(item.pertanyaanmhs_id, item.question)}
-                                                                                            >
-                                                                                                <CIcon content={freeSet.cilPin} className="mfe-2" />
-                                                                                                Pin Question
-                                                                                            </CLink>
-                                                                                        </CDropdownItem>
-                                                                                        :
-                                                                                        <CDropdownItem>
-                                                                                            <CLink
-                                                                                                className="card-header-action"
-                                                                                                onClick={() => unpinQuestion(item.pertanyaanmhs_id, item.question)}
-                                                                                            >
-                                                                                                <CIcon content={freeSet.cilEyedropper} className="mfe-2" />
-                                                                                                Unpin Question
-                                                                                            </CLink>
-                                                                                        </CDropdownItem>
                                                                                 }
                                                                             </CDropdownMenu>
                                                                         </CDropdown>
@@ -403,8 +348,7 @@ const PertanyaanMinggu = () => {
                     </div >
             }
         </>
-
     )
 }
 
-export default PertanyaanMinggu;
+export default PertanyaanDsnList;

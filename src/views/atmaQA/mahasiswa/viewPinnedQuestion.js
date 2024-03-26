@@ -18,9 +18,9 @@ import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
 import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
 import DOMPurify from 'dompurify';
-import './App.css'
+import '../mahasiswa/App.css'
 
-const PertanyaanMhsDetail = () => {
+const ViewPinnedQuestion = () => {
     const token = localStorage.getItem('token');
 
     const { classid, weekid, questionid } = useParams()
@@ -79,6 +79,7 @@ const PertanyaanMhsDetail = () => {
                     },
                 })
             .then(response => {
+                // console.log(response);
                 setPertanyaan(response.data.question)
                 setLoading(false)
             })
@@ -98,6 +99,8 @@ const PertanyaanMhsDetail = () => {
         getUserRole()
         getPertanyaan()
     }, [])
+
+    // console.log(pertanyaan);
 
     return (
         <>
@@ -138,6 +141,24 @@ const PertanyaanMhsDetail = () => {
                                                                 disabled
                                                                 defaultValue={kelas.kelas_name}
                                                             ></CInput>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
+
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Asker</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol xs="12" md="10">
+                                                            <CInput
+                                                                name="textarea-input"
+                                                                id="textarea-input"
+                                                                rows="9"
+                                                                placeholder="Type your question here..."
+                                                                disabled
+                                                                defaultValue={pertanyaan.status_mahasiswa == "1" ? pertanyaan.npm : "Anonymous"}
+                                                            />
                                                         </CCol>
                                                     </CInputGroup>
                                                 </CRow>
@@ -200,4 +221,4 @@ const PertanyaanMhsDetail = () => {
     )
 }
 
-export default PertanyaanMhsDetail;
+export default ViewPinnedQuestion;

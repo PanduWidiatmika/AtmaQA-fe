@@ -11,14 +11,14 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
+    // CInputGroupPrepend,
     CCardGroup,
-    CContainer,
+    // CContainer,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
-import swal from 'sweetalert';
-import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
+// import swal from 'sweetalert';
+import { useParams } from "react-router-dom/cjs/react-router-dom.min";
 
 const DosenDetail = () => {
     const token = localStorage.getItem('token');
@@ -45,11 +45,12 @@ const DosenDetail = () => {
                 })
                 .catch(error => {
                     console.log(error);
+                    // swal("Oops", "Something went wrong", "warning");
                 })
         }
 
         getData();
-    }, [id])
+    }, [id, token])
 
     return (
         <div>
@@ -59,10 +60,10 @@ const DosenDetail = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
-                                        <h2>Dosen Detail</h2>
+                                    <CCol md="10" xs="9">
+                                        <h2>Lecturer Detail</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" xs="3" className="text-right">
                                         <CLink to={{ pathname: "/dosen/dosen-list" }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>

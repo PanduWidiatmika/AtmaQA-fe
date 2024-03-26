@@ -18,9 +18,9 @@ import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
 import swal from 'sweetalert';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-// import CIcon from '@coreui/icons-react'
+import { useParams } from "react-router-dom/cjs/react-router-dom";
 
-const AddKelasDosen = () => {
+const EditKelasDosen = () => {
     const hariList = [
         {
             hari: "Monday",
@@ -56,41 +56,34 @@ const AddKelasDosen = () => {
 
     const token = localStorage.getItem('token');
 
-    const [name, setName] = useState('')
-    const [matkul, setMatkul] = useState('')
-    const [hari, setHari] = useState('')
-    const [sesi, setSesi] = useState('')
-
-    const [course, setCourse] = useState([])
-    const [userLog, setUserLog] = useState([])
+    const { id } = useParams();
 
     const history = useHistory();
 
-    function makeid(length) {
-        let result = '';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const charactersLength = characters.length;
-        let counter = 0;
-        while (counter < length) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-            counter += 1;
-        }
-        return result;
-    }
+    const [data, setData] = useState({
+        kelas_name: '',
+        hari: '',
+        sesi: '',
+    })
 
-    const createKelas = (event) => {
+    const [matkul, setMatkul] = useState({
+        matkul_name: '',
+        dosen_name: '',
+        matkul_id: '',
+    })
+
+    const [course, setCourse] = useState([])
+
+    const updateKelas = (event) => {
         event.preventDefault();
 
-        const class_password = makeid(5);
-
         api
-            .post('/kelas',
+            .put(`/kelas/${id}`,
                 {
-                    name: name,
-                    matkul_id: matkul,
-                    hari: hari,
-                    sesi: sesi,
-                    password_kelas: class_password,
+                    name: data.kelas_name,
+                    matkul_id: matkul.matkul_id,
+                    hari: data.hari,
+                    sesi: data.sesi,
                 }
                 , {
                     headers: {
@@ -98,7 +91,7 @@ const AddKelasDosen = () => {
                     },
                 })
             .then(async response => {
-                await swal("Good job!", "Add Class success!", "success");
+                await swal("Good job!", "Update Class success!", "success");
                 history.push('/lecturer-class/lecturer-class-list')
                 // console.log(response);
             })
@@ -107,56 +100,75 @@ const AddKelasDosen = () => {
             })
     }
 
-    const getAllCourse = () => {
-        api
-            .post(`/get-dosen-course`, {
-                id: userLog.id
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-            .then(response => {
-                setCourse(response.data.matkul)
-            })
-            .catch(error => {
-                console.log(error);
-            })
+    const handleChangeCourse = (event) => {
+        setMatkul(matkul => ({
+            ...matkul,
+            matkul_id: event.target.value,
+            matkul_name: event.target.value,
+            dosen_name: event.target.value,
+        }));
     }
 
-    const getUserRole = () => {
-        api
-            .get('/user', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-            .then(response => {
-                setUserLog(response.data.userloggedin)
-            })
-            .catch(error => {
-                console.log(error);
-            })
+    const handleChangeDay = (event) => {
+        setData(data => ({
+            ...data,
+            hari: event.target.value,
+        }));
+    }
+
+    const handleChangeSession = (event) => {
+        setData(data => ({
+            ...data,
+            sesi: event.target.value,
+        }));
     }
 
     useEffect(() => {
-        getUserRole()
-    }, [])
+        const getData = () => {
+            api
+                .get(`/kelas/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                .then(response => {
+                    setData(response.data.kelas)
+                    setMatkul(response.data.matkul)
+                })
+                .catch(error => {
+                    console.log(error);
+                })
+        }
+
+        const getAllCourse = () => {
+            api
+                .get(`/matkul`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                .then(response => {
+                    setCourse(response.data.matkul)
+                })
+                .catch(error => {
+                    console.log(error);
+                })
+        }
+
+        getData();
+        getAllCourse();
+    }, [id])
 
     useEffect(() => {
-        getAllCourse()
-    }, [userLog.id])
+        getCourse()
+    }, [matkul.matkul_id])
 
     const [oneCourse, setOneCourse] = useState('')
     const [oneDosen, setOneDosen] = useState('')
 
-    useEffect(() => {
-        getCourse()
-    }, [matkul])
-
     const getCourse = () => {
         api
-            .get(`/matkul/${matkul}`, {
+            .get(`/matkul/${matkul.matkul_id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -174,17 +186,17 @@ const AddKelasDosen = () => {
         event.preventDefault();
 
         swal({
-            title: "Confirm create for a new class!",
-            text: `Name: ${name}\nCourse: ${oneCourse.matkul_name}\nLecturer: ${oneDosen.dosen_name}\nSchedule: ${hari} - ${sesi}`,
+            title: "Confirm edit for:",
+            text: `Name: ${data.kelas_name}\nCourse: ${oneCourse.matkul_name}\nLecturer: ${oneDosen.dosen_name}\nSchedule: ${data.hari} - ${data.sesi}`,
             icon: "warning",
             buttons: true,
             dangerMode: false,
         })
             .then(async (willDelete) => {
                 if (willDelete) {
-                    createKelas(event)
+                    updateKelas(event)
                 } else {
-                    await swal("Create Class Cancelled!");
+                    await swal("Edit Class Cancelled!");
                 }
             })
             .catch((error) => {
@@ -201,7 +213,7 @@ const AddKelasDosen = () => {
                             <CCardHeader>
                                 <CRow>
                                     <CCol md="10" xs="9">
-                                        <h2>Add Class</h2>
+                                        <h2>Edit Class</h2>
                                     </CCol>
                                     <CCol md="2" xs="3" className="text-right">
                                         <CLink to={{ pathname: "/lecturer-class/lecturer-class-list" }}>
@@ -223,9 +235,15 @@ const AddKelasDosen = () => {
                                             <CCol>
                                                 <CInput
                                                     type="text"
-                                                    placeholder="Aljabar Linear A"
+                                                    placeholder="Alexa"
                                                     required
-                                                    onChange={(event) => setName(event.target.value)}
+                                                    defaultValue={data.kelas_name}
+                                                    onChange={(event) => {
+                                                        setData({
+                                                            ...data,
+                                                            kelas_name: event.target.value,
+                                                        });
+                                                    }}
                                                 ></CInput>
                                             </CCol>
                                         </CInputGroup>
@@ -234,14 +252,13 @@ const AddKelasDosen = () => {
                                     <CRow>
                                         <CInputGroup className="mb-3">
                                             <CCol md="2">
-                                                <CInputGroupText>Choose Course</CInputGroupText>
+                                                <CInputGroupText>Course</CInputGroupText>
                                             </CCol>
                                             <CCol xs="12" md="9">
                                                 <CSelect custom name="select" id="select"
-                                                    onChange={(event) => setMatkul(event.target.value)}
-                                                    required
+                                                    onChange={(event) => handleChangeCourse(event)}
                                                 >
-                                                    <option value="" hidden>Select Course</option>
+                                                    <option value={matkul.matkul_id} hidden>{matkul.matkul_name} - {matkul.dosen_name}</option>
                                                     {
                                                         course.map((d, i) => {
                                                             return (
@@ -257,14 +274,13 @@ const AddKelasDosen = () => {
                                     <CRow>
                                         <CInputGroup className="mb-3">
                                             <CCol md="2">
-                                                <CInputGroupText>Choose Day</CInputGroupText>
+                                                <CInputGroupText>Day</CInputGroupText>
                                             </CCol>
                                             <CCol xs="12" md="9">
                                                 <CSelect custom name="select" id="select"
-                                                    onChange={(event) => setHari(event.target.value)}
-                                                    required
+                                                    onChange={(event) => handleChangeDay(event)}
                                                 >
-                                                    <option value="" hidden>Select Day</option>
+                                                    <option value={data.hari} hidden>{data.hari}</option>
                                                     {
                                                         hariList.map((d, i) => {
                                                             return (
@@ -280,14 +296,13 @@ const AddKelasDosen = () => {
                                     <CRow>
                                         <CInputGroup className="mb-3">
                                             <CCol md="2">
-                                                <CInputGroupText>Choose Session</CInputGroupText>
+                                                <CInputGroupText>Session</CInputGroupText>
                                             </CCol>
                                             <CCol xs="12" md="9">
                                                 <CSelect custom name="select" id="select"
-                                                    onChange={(event) => setSesi(event.target.value)}
-                                                    required
+                                                    onChange={(event) => handleChangeSession(event)}
                                                 >
-                                                    <option value="" hidden>Select Session</option>
+                                                    <option value={data.sesi} hidden>{data.sesi}</option>
                                                     {
                                                         sesiList.map((d, i) => {
                                                             return (
@@ -303,7 +318,7 @@ const AddKelasDosen = () => {
                                     <CRow className="text-center">
                                         <CCol>
                                             <CButton color="success" className="px-4" type="submit">
-                                                Create
+                                                Update
                                             </CButton>
                                         </CCol>
                                     </CRow>
@@ -317,4 +332,4 @@ const AddKelasDosen = () => {
     )
 }
 
-export default AddKelasDosen;
+export default EditKelasDosen;

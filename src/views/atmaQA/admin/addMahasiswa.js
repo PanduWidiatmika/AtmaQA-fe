@@ -11,11 +11,11 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
+    // CInputGroupPrepend,
     CCardGroup,
-    CContainer,
+    // CContainer,
 } from "@coreui/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { api } from "src/plugins/api";
 import swal from 'sweetalert';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
@@ -48,13 +48,36 @@ const AddMahasiswa = () => {
                     },
                 })
             .then(async response => {
-                await swal("Good job!", "Add Mahasiswa success!", "success");
+                await swal("Good job!", "Add Student success!", "success");
                 history.push('/mahasiswa/mahasiswa-list')
                 // console.log(response);
             })
             .catch(error => {
-                console.log(error);
+                // console.log(error);
+                swal("Oops", "Something went wrong", "warning");
             })
+    }
+
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: "Confirm create for a new student:",
+            text: `Name: ${name}\nNPM: ${npm}\nEmail: ${email}`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    createMahasiswa(event)
+                } else {
+                    await swal("Create Student Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }
 
     return (
@@ -65,10 +88,10 @@ const AddMahasiswa = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
-                                        <h2>Add Mahasiswa</h2>
+                                    <CCol md="10" xs="9">
+                                        <h2>Add Student</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" xs="3" className="text-right">
                                         <CLink to={{ pathname: "/mahasiswa/mahasiswa-list" }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>
@@ -78,7 +101,7 @@ const AddMahasiswa = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => createMahasiswa(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
                                     <CRow>
                                         <CInputGroup className="mb-3">
@@ -144,7 +167,7 @@ const AddMahasiswa = () => {
                                     </CRow>
                                     <CRow className="text-center">
                                         <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
+                                            <CButton color="success" className="px-4" type="submit">
                                                 Create
                                             </CButton>
                                         </CCol>

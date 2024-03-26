@@ -11,9 +11,9 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
+    // CInputGroupPrepend,
     CCardGroup,
-    CContainer,
+    // CContainer,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
@@ -53,7 +53,7 @@ const EditDosen = () => {
                     },
                 })
             .then(async response => {
-                await swal("Good job!", "Update Dosen success!", "success");
+                await swal("Good job!", "Update Lecturer success!", "success");
                 history.push('/dosen/dosen-list')
                 // console.log(response);
             })
@@ -81,6 +81,28 @@ const EditDosen = () => {
         getData();
     }, [id])
 
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: `Confirm edit for ${data.dosen_name}!`,
+            text: `Name: ${data.dosen_name}\nPhone Number: ${data.notelp_dosen}\nEmail: ${data.email_dosen}`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    updateDosen(event)
+                } else {
+                    await swal("Edit Lecturer Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
     return (
         <div>
             <CRow className="justify-content-center">
@@ -89,10 +111,10 @@ const EditDosen = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
-                                        <h2>Edit Dosen</h2>
+                                    <CCol md="10" xs="9">
+                                        <h2>Edit Lecturer</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" xs="3" className="text-right">
                                         <CLink to={{ pathname: "/dosen/dosen-list" }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>
@@ -102,7 +124,7 @@ const EditDosen = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => updateDosen(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
                                     <CRow>
                                         <CInputGroup className="mb-3">
@@ -192,7 +214,7 @@ const EditDosen = () => {
                                     </CRow>
                                     <CRow className="text-center">
                                         <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
+                                            <CButton color="success" className="px-4" type="submit">
                                                 Update
                                             </CButton>
                                         </CCol>

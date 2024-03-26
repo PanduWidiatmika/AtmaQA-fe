@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
-  CBadge,
+  // CBadge,
   CDropdown,
   CDropdownItem,
   CDropdownMenu,
@@ -10,9 +10,16 @@ import {
 import CIcon from '@coreui/icons-react'
 import swal from "sweetalert";
 import { api } from 'src/plugins/api';
+import { freeSet } from '@coreui/icons'
+
+import avatar from '../iconAtma/6.jpg'
+
+import profileanon from '../iconAtma/profileanon.png'
+import profile from '../iconAtma/profile.jpg'
 
 const TheHeaderDropdown = () => {
   const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role')
 
   const logout = () => {
     swal({
@@ -36,15 +43,67 @@ const TheHeaderDropdown = () => {
             window.location.reload();
           })
           .catch(error => {
-            console.log(error);
+            swal("Oops", "Something went wrong", "warning");
           })
       } else {
         await swal("Logout cancelled!");
         window.location.reload();
       }
     });
-
   }
+
+  const changeStatus = () => {
+    swal({
+      title: "Warning",
+      text: "Do you want to change your visibility?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then(async (willDelete) => {
+      if (willDelete) {
+        api
+          .post('/change-status-mahasiswa', { id: userLog.id, }, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then(async response => {
+            // setData(response.data.mahasiswa)
+            await swal("Good Job!", "Change Status Success!", "success");
+            window.location.reload();
+          })
+          .catch(error => {
+            swal("Oops", "Something went wrong", "warning");
+          })
+      } else {
+        await swal("Change status cancelled!");
+        window.location.reload();
+      }
+    });
+  }
+
+  const [userLog, setUserLog] = useState([])
+
+  // console.log(userLog);
+
+  useEffect(() => {
+    const getUserRole = () => {
+      api
+        .get('/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then(response => {
+          setUserLog(response.data.userloggedin)
+        })
+        .catch(error => {
+          swal("Oops", "Something went wrong", "warning");
+        })
+    }
+
+    getUserRole()
+  }, [token])
 
   return (
     <CDropdown
@@ -54,11 +113,22 @@ const TheHeaderDropdown = () => {
     >
       <CDropdownToggle className="c-header-nav-link" caret={false}>
         <div className="c-avatar">
-          <CImg
-            src={'avatars/6.jpg'}
-            className="c-avatar-img"
-            alt="admin@bootstrapmaster.com"
-          />
+          {
+            userLog.stats === "0"
+              ?
+              <CImg
+                src={profileanon}
+                className="c-avatar-img"
+                alt="photo"
+              />
+              :
+              <CImg
+                src={profile}
+                className="c-avatar-img"
+                alt="photo"
+              />
+          }
+
         </div>
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
@@ -71,57 +141,37 @@ const TheHeaderDropdown = () => {
           <strong>Account</strong>
         </CDropdownItem>
         <CDropdownItem>
-          <CIcon name="cil-bell" className="mfe-2" />
-          Updates
-          <CBadge color="info" className="mfs-auto">42</CBadge>
+          <CIcon content={freeSet.cilUser} className="mfe-2" />
+          {userLog.name}
         </CDropdownItem>
+
         <CDropdownItem>
-          <CIcon name="cil-envelope-open" className="mfe-2" />
-          Messages
-          <CBadge color="success" className="mfs-auto">42</CBadge>
+          <CIcon content={freeSet.cilLaptop} className="mfe-2" />
+          {role}
         </CDropdownItem>
-        <CDropdownItem>
-          <CIcon name="cil-task" className="mfe-2" />
-          Tasks
-          <CBadge color="danger" className="mfs-auto">42</CBadge>
-        </CDropdownItem>
-        <CDropdownItem>
-          <CIcon name="cil-comment-square" className="mfe-2" />
-          Comments
-          <CBadge color="warning" className="mfs-auto">42</CBadge>
-        </CDropdownItem>
-        <CDropdownItem
-          header
-          tag="div"
-          color="light"
-          className="text-center"
-        >
-          <strong>Settings</strong>
-        </CDropdownItem>
-        <CDropdownItem>
-          <CIcon name="cil-user" className="mfe-2" />Profile
-        </CDropdownItem>
-        <CDropdownItem>
-          <CIcon name="cil-settings" className="mfe-2" />
-          Settings
-        </CDropdownItem>
-        <CDropdownItem>
-          <CIcon name="cil-credit-card" className="mfe-2" />
-          Payments
-          <CBadge color="secondary" className="mfs-auto">42</CBadge>
-        </CDropdownItem>
-        <CDropdownItem>
-          <CIcon name="cil-file" className="mfe-2" />
-          Projects
-          <CBadge color="primary" className="mfs-auto">42</CBadge>
-        </CDropdownItem>
+        {
+          role === "mahasiswa"
+            ?
+            <CDropdownItem onClick={(e) => changeStatus()}>
+              <CIcon content={freeSet.cilTransfer} className="mfe-2" />
+              {
+                userLog.stats === "0"
+                  ?
+                  "Anonymous"
+                  :
+                  "Visible"
+              }
+            </CDropdownItem>
+            :
+            <></>
+        }
         <CDropdownItem divider />
         <CDropdownItem onClick={(e) => logout()}>
-          <CIcon name="cil-lock-locked" className="mfe-2" />
-          Lock Account
+          <CIcon content={freeSet.cilAccountLogout} className="mfe-2" />
+          Log Out
         </CDropdownItem>
       </CDropdownMenu>
-    </CDropdown>
+    </CDropdown >
   )
 }
 

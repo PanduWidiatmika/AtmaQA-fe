@@ -11,16 +11,11 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
-    CFormGroup,
-    CLabel,
     CTextarea
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
-import swal from 'sweetalert';
 import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
 import DOMPurify from 'dompurify';
 import '../mahasiswa/App.css'
@@ -37,6 +32,8 @@ const PertanyaanMhsDetailDsn = () => {
     })
 
     const history = useHistory();
+
+    const [loading, setLoading] = useState(true)
 
     const getUserRole = () => {
         api
@@ -83,6 +80,7 @@ const PertanyaanMhsDetailDsn = () => {
                 })
             .then(response => {
                 setPertanyaan(response.data.question)
+                setLoading(false)
             })
             .catch(error => {
                 console.log(error);
@@ -102,49 +100,55 @@ const PertanyaanMhsDetailDsn = () => {
     }, [])
 
     return (
-        <div>
-            <CRow className="justify-content-center">
-                <CCol>
-                    <CCardGroup>
-                        <CCard>
-                            <CCardHeader>
-                                <CRow>
-                                    <CCol md="10">
-                                        <h2>Question Detail</h2>
-                                    </CCol>
-                                    <CCol md="2" className="text-right">
-                                        <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}` }}>
-                                            <CButton color="danger">Back</CButton>
-                                        </CLink>
-                                    </CCol>
-                                </CRow>
-                            </CCardHeader>
+        <>
+            {
+                loading
+                    ?
+                    <h1>Loading...</h1>
+                    :
+                    <div>
+                        <CRow className="justify-content-center">
+                            <CCol>
+                                <CCardGroup>
+                                    <CCard>
+                                        <CCardHeader>
+                                            <CRow>
+                                                <CCol md="10" xs="9">
+                                                    <h2>Question Detail</h2>
+                                                </CCol>
+                                                <CCol md="2" xs="3" className="text-right">
+                                                    <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}` }}>
+                                                        <CButton color="danger">Back</CButton>
+                                                    </CLink>
+                                                </CCol>
+                                            </CRow>
+                                        </CCardHeader>
 
-                            <CCardBody>
-                                <CForm method="post">
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Class Name</CInputGroupText>
-                                            </CCol>
-                                            <CCol>
-                                                <CInput
-                                                    type="text"
-                                                    placeholder="Alexa"
-                                                    disabled
-                                                    defaultValue={kelas.kelas_name}
-                                                ></CInput>
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
+                                        <CCardBody>
+                                            <CForm method="post">
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Class Name</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol>
+                                                            <CInput
+                                                                type="text"
+                                                                placeholder="Alexa"
+                                                                disabled
+                                                                defaultValue={kelas.kelas_name}
+                                                            ></CInput>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
 
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Question</CInputGroupText>
-                                            </CCol>
-                                            <CCol xs="12" md="10">
-                                                {/* <CTextarea
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Question</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol xs="12" md="10">
+                                                            {/* <CTextarea
                                                     name="textarea-input"
                                                     id="textarea-input"
                                                     rows="9"
@@ -152,47 +156,49 @@ const PertanyaanMhsDetailDsn = () => {
                                                     disabled
                                                     defaultValue={convertedText}
                                                 /> */}
-                                                <div className="preview"
-                                                    dangerouslySetInnerHTML={createMarkup(pertanyaan.pertanyaan_mhs)}>
-                                                </div>
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
+                                                            <div className="preview"
+                                                                dangerouslySetInnerHTML={createMarkup(pertanyaan.pertanyaan_mhs)}>
+                                                            </div>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
 
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Answer</CInputGroupText>
-                                            </CCol>
-                                            <CCol xs="12" md="10">
-                                                {
-                                                    pertanyaan.jawaban_dosen == null ?
-                                                        <CTextarea
-                                                            name="textarea-input"
-                                                            id="textarea-input"
-                                                            rows="9"
-                                                            placeholder="Answer Here..."
-                                                            disabled
-                                                        // required
-                                                        // onChange={(event) => setPertanyaan(event.target.value)}
-                                                        />
-                                                        :
-                                                        <div className="preview"
-                                                            dangerouslySetInnerHTML={createMarkup(pertanyaan.jawaban_dosen)}>
-                                                        </div>
-                                                }
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Answer</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol xs="12" md="10">
+                                                            {
+                                                                pertanyaan.jawaban_dosen == null ?
+                                                                    <CTextarea
+                                                                        name="textarea-input"
+                                                                        id="textarea-input"
+                                                                        rows="9"
+                                                                        placeholder="Answer Here..."
+                                                                        disabled
+                                                                    // required
+                                                                    // onChange={(event) => setPertanyaan(event.target.value)}
+                                                                    />
+                                                                    :
+                                                                    <div className="preview"
+                                                                        dangerouslySetInnerHTML={createMarkup(pertanyaan.jawaban_dosen)}>
+                                                                    </div>
+                                                            }
 
 
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
-                                </CForm>
-                            </CCardBody>
-                        </CCard>
-                    </CCardGroup>
-                </CCol>
-            </CRow>
-        </div>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
+                                            </CForm>
+                                        </CCardBody>
+                                    </CCard>
+                                </CCardGroup>
+                            </CCol>
+                        </CRow>
+                    </div>
+            }
+        </>
     )
 }
 

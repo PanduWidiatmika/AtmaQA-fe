@@ -12,15 +12,15 @@ import {
     CInput,
     CInputGroupText,
     CCardGroup,
-    CFormGroup,
-    CLabel,
+    // CFormGroup,
+    // CLabel,
     CSelect,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
 import swal from 'sweetalert';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import CIcon from '@coreui/icons-react'
+// import CIcon from '@coreui/icons-react'
 
 const AddKelas = () => {
     const hariList = [
@@ -64,6 +64,9 @@ const AddKelas = () => {
     const [sesi, setSesi] = useState('')
 
     const [course, setCourse] = useState([])
+
+    const [oneCourse, setOneCourse] = useState('')
+    const [oneDosen, setOneDosen] = useState('')
 
     const history = useHistory();
 
@@ -127,6 +130,48 @@ const AddKelas = () => {
         getAllCourse();
     }, [])
 
+    useEffect(() => {
+        getCourse()
+    }, [matkul])
+
+    const getCourse = () => {
+        api
+            .get(`/matkul/${matkul}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+            .then(response => {
+                setOneCourse(response.data.matkul)
+                setOneDosen(response.data.dosen)
+            })
+            .catch(error => {
+                console.log(error);
+            })
+    }
+
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: "Confirm create for a new class!",
+            text: `Name: ${name}\nCourse: ${oneCourse.matkul_name}\nLecturer: ${oneDosen.dosen_name}\nSchedule: ${hari} - ${sesi}`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    createKelas(event)
+                } else {
+                    await swal("Create Class Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
     return (
         <div>
             <CRow className="justify-content-center">
@@ -135,10 +180,10 @@ const AddKelas = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
+                                    <CCol md="10" xs="9">
                                         <h2>Add Class</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" className="text-right" xs="3">
                                         <CLink to={{ pathname: "/class/class-list" }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>
@@ -148,7 +193,7 @@ const AddKelas = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => createKelas(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
                                     <CRow>
                                         <CInputGroup className="mb-3">
@@ -237,7 +282,7 @@ const AddKelas = () => {
 
                                     <CRow className="text-center">
                                         <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
+                                            <CButton color="success" className="px-4" type="submit">
                                                 Create
                                             </CButton>
                                         </CCol>

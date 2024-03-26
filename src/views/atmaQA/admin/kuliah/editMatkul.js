@@ -11,9 +11,9 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
+    // CInputGroupPrepend,
     CCardGroup,
-    CContainer,
+    // CContainer,
     CSelect,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
@@ -33,13 +33,15 @@ const EditMatkul = () => {
 
     const [crntDosen, setCrntDosen] = useState({}) //current dosen
 
-    const [dosen, setDosen] = useState('') //set dosen baru
+    // const [dosen, setDosen] = useState('') //set dosen baru
+
+    const [oneDosen, setOneDosen] = useState('')
 
     const history = useHistory();
 
     const updateMatkul = (event) => {
-        console.log(dataMatkul)
-        console.log(dosen)
+        // console.log(dataMatkul)
+        // console.log(dosen)
         event.preventDefault();
 
         api
@@ -107,6 +109,48 @@ const EditMatkul = () => {
         getDataDosen();
     }, [id])
 
+    const getDosen = () => {
+        api
+            .get(`/dosen/${crntDosen.dosen_id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+            })
+            .then(response => {
+                setOneDosen(response.data.dosen)
+                // console.log(response);
+            })
+            .catch(error => {
+                console.log(error);
+            })
+    }
+
+    useEffect(() => {
+        getDosen()
+    }, [crntDosen.dosen_id])
+
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: "Confirm edit for: ",
+            text: `Course Name: ${dataMatkul.matkul_name}\nLecturer: ${oneDosen.dosen_name}`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    updateMatkul(event)
+                } else {
+                    await swal("Edit Course Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
     return (
         <div>
             <CRow className="justify-content-center">
@@ -115,10 +159,10 @@ const EditMatkul = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
+                                    <CCol md="10" xs="9">
                                         <h2>Edit Course</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" className="text-right" xs="3">
                                         <CLink to={{ pathname: "/course/course-list" }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>
@@ -128,7 +172,7 @@ const EditMatkul = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => updateMatkul(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
                                     <CRow>
                                         <CInputGroup className="mb-3">
@@ -155,7 +199,7 @@ const EditMatkul = () => {
                                     <CRow>
                                         <CInputGroup className="mb-3">
                                             <CCol md="2">
-                                                <CInputGroupText>Dosen Name</CInputGroupText>
+                                                <CInputGroupText>Lecturer's Name</CInputGroupText>
                                             </CCol>
                                             <CCol xs="12" md="9">
                                                 <CSelect custom name="select" id="select" onChange={(event) => handleChange(event)}>
@@ -174,7 +218,7 @@ const EditMatkul = () => {
 
                                     <CRow className="text-center">
                                         <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
+                                            <CButton color="success" className="px-4" type="submit">
                                                 Update
                                             </CButton>
                                         </CCol>

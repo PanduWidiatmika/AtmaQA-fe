@@ -11,9 +11,7 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
     CFormGroup,
     CLabel,
     CInputRadio,
@@ -23,8 +21,6 @@ import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
 import swal from 'sweetalert';
 import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { CKEditor } from "@ckeditor/ckeditor5-react";
 
 const AddPertanyaanDsn = () => {
     const token = localStorage.getItem('token');
@@ -32,11 +28,11 @@ const AddPertanyaanDsn = () => {
     const { id, weekid } = useParams()
 
     const [kelas, setKelas] = useState([])
-    const [userLog, setUserLog] = useState([])
-    const [pilihanA, setpilihanA] = useState([])
-    const [pilihanB, setpilihanB] = useState([])
-    const [pilihanC, setpilihanC] = useState([])
-    const [correct, setCorrect] = useState([])
+    // const [userLog, setUserLog] = useState([])
+    // const [pilihanA, setpilihanA] = useState([])
+    // const [pilihanB, setpilihanB] = useState([])
+    // const [pilihanC, setpilihanC] = useState([])
+    // const [correct, setCorrect] = useState([])
 
     const [questType, setQuestType] = useState('')
 
@@ -49,7 +45,7 @@ const AddPertanyaanDsn = () => {
     // "3": {"question": "", "option_A": "","option_B": "","option_C": "","option_D": "",
     // "4": {"question": "", "option_A": "","option_B": "","option_C": "","option_D": "",
     // }
-    const [questions, setQuestions] = useState([]);
+    const [questions, setQuestions] = useState({});
 
 
     const questionType = [
@@ -80,54 +76,156 @@ const AddPertanyaanDsn = () => {
 
     const onChangeNumberOfQuestions = (e) => {
         const tempNumberOfQuestions = e.target.value;
-
-        console.log('Sekarang pertanyaan jadi ' + tempNumberOfQuestions)
         setNumberOfQuestions(tempNumberOfQuestions);
-        // Add logic to make the question stay
-        // HERE
         if (tempNumberOfQuestions > 0) {
-            var generatedArrays;
-            // const generateArrays = Array.from(Array(Number(tempNumberOfQuestions)).keys())
-            const generateArrays = Array.from(Array(Number(tempNumberOfQuestions)).keys()).map(val => ('Sample Pertanyaan ' + val))
-            setQuestions(generateArrays);
+            if (questType === "Essay") {
+                var obj = {};
+                for (var i = 0; i < tempNumberOfQuestions; i++) {
+                    obj[i] = {
+                        "question": questions.hasOwnProperty(i) ? questions[i]["question"] : "",
+                        "option_A": "",
+                        "option_B": "",
+                        "option_C": "",
+                        "correct": "",
+                    };
+                }
+                setQuestions(obj);
+            } else {
+                var obj = {};
+                for (var i = 0; i < tempNumberOfQuestions; i++) {
+                    obj[i] = {
+                        "question": questions.hasOwnProperty(i) ? questions[i]["question"] : "",
+                        "option_A": questions.hasOwnProperty(i) ? questions[i]["option_A"] : "",
+                        "option_B": questions.hasOwnProperty(i) ? questions[i]["option_B"] : "",
+                        "option_C": questions.hasOwnProperty(i) ? questions[i]["option_C"] : "",
+                        "correct": questions.hasOwnProperty(i) ? questions[i]["correct"] : "",
+                    };
+                }
+                setQuestions(obj);
+            }
         } else {
             setQuestions([])
         }
     };
 
     function addQuestionEssay() {
-        // [1, 2, 3]
-        // d = 0, 1, 2
-        // i = 1, 2, 3
-        return questions.map((val, i) => {
+        return Object.keys(questions).map((key) => {
             return (
-                <CRow key={i}>
-                    <CInputGroup className="mb-3">
-                        <CCol md="3">
-                            <CInputGroupText>Question {i + 1}</CInputGroupText>
-                        </CCol>
-                        <CCol>
-                            <input value={val} onChange={(e) => { handleChangeEditorSimple(e, i) }} />
-                        </CCol>
-                    </CInputGroup>
-                </CRow>
+                <>
+                    <CRow key={key}>
+                        <CInputGroup className="mb-3">
+                            <CCol md="3">
+                                <CInputGroupText>Question {+key + 1}</CInputGroupText>
+                            </CCol>
+                            <CCol>
+                                <CInput
+                                    type="text"
+                                    placeholder="Alexa"
+                                    required
+                                    value={questions[key]["question"]} onChange={(e) => { handleChangeEditorSimple(e, key) }}
+                                ></CInput>
+                            </CCol>
+                        </CInputGroup>
+                    </CRow>
+                    <hr></hr>
+                </>
             );
         })
     }
 
-    useEffect(() => {
-        console.log(questions);
-    }, [questions])
+    const handleChangeEditorSimple = (e, key) => {
+        var new_questions = {
+            "question": e.target.value,
+            "option_A": "",
+            "option_B": "",
+            "option_C": "",
+        };
+        setQuestions({ ...questions, [key]: new_questions })
+    }
 
-    const handleChangeEditorSimple = (e, index) => {
-        setQuestions(questions.map((questions, i) => {
-            if (i == index) {
-                return e.target.value;
-            } else {
-                return questions
-            }
-        }));
-        // setPertanyaan(editor.getData())
+    // const handleChangeEditorType = (e) => {
+    //     var new_questions = {
+    //         "question": e.target.value,
+    //         "option_A": "",
+    //         "option_B": "",
+    //         "option_C": "",
+    //     };
+    //     setQuestions({ ...questions, [key]: new_questions })
+    // }
+
+    const handleChangeEditorMultiple = (e, key) => {
+        var new_questions = {
+            "question": e.target.value,
+            "option_A": questions[key]['option_A'],
+            "option_B": questions[key]['option_B'],
+            "option_C": questions[key]['option_C'],
+            "correct": questions[key]['correct'],
+        };
+        setQuestions({ ...questions, [key]: new_questions })
+    }
+
+    const handleChangeEditorA = (e, key) => {
+        var new_questions = {
+            "question": questions[key]['question'],
+            "option_A": e.target.value,
+            "option_B": questions[key]['option_B'],
+            "option_C": questions[key]['option_C'],
+            "correct": questions[key]['correct'],
+        };
+        setQuestions({ ...questions, [key]: new_questions })
+    }
+
+    const handleChangeEditorB = (e, key) => {
+        var new_questions = {
+            "question": questions[key]['question'],
+            "option_A": questions[key]['option_A'],
+            "option_B": e.target.value,
+            "option_C": questions[key]['option_C'],
+            "correct": questions[key]['correct'],
+        };
+        setQuestions({ ...questions, [key]: new_questions })
+    }
+
+    const handleChangeEditorC = (e, key) => {
+        var new_questions = {
+            "question": questions[key]['question'],
+            "option_A": questions[key]['option_A'],
+            "option_B": questions[key]['option_B'],
+            "option_C": e.target.value,
+            "correct": questions[key]['correct'],
+        };
+        setQuestions({ ...questions, [key]: new_questions })
+    }
+
+    const handleChangeEditorCorrect = (e, key) => {
+        if (e.target.value === "A") {
+            var new_questions = {
+                "question": questions[key]['question'],
+                "option_A": questions[key]['option_A'],
+                "option_B": questions[key]['option_B'],
+                "option_C": questions[key]['option_C'],
+                "correct": questions[key]['option_A'],
+            };
+            setQuestions({ ...questions, [key]: new_questions })
+        } else if (e.target.value === "B") {
+            var new_questions = {
+                "question": questions[key]['question'],
+                "option_A": questions[key]['option_A'],
+                "option_B": questions[key]['option_B'],
+                "option_C": questions[key]['option_C'],
+                "correct": questions[key]['option_B'],
+            };
+            setQuestions({ ...questions, [key]: new_questions })
+        } else {
+            var new_questions = {
+                "question": questions[key]['question'],
+                "option_A": questions[key]['option_A'],
+                "option_B": questions[key]['option_B'],
+                "option_C": questions[key]['option_C'],
+                "correct": questions[key]['option_C'],
+            };
+            setQuestions({ ...questions, [key]: new_questions })
+        }
     }
 
     const addQuestion = (event) => {
@@ -135,17 +233,37 @@ const AddPertanyaanDsn = () => {
 
         const tempid = weekid;
 
-        api.post('/add-question-dsn', {
-            //data
-            pertanyaan: JSON.stringify(questions),
-            id: tempid,
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then((response) => {
-            //response
-        })
+        if (questType === "Essay") {
+            api.post('/add-question-dsn', {
+                //data
+                pertanyaan: JSON.stringify(questions),
+                id: tempid,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }).then(async (response) => {
+                await swal("Good job!", "Add Question(s) Success!", "success");
+                history.push(`/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}`)
+            }).catch(error => {
+                console.log(error);
+            })
+        } else {
+            api.post('/add-multi-question-dsn', {
+                //data
+                pertanyaan: JSON.stringify(questions),
+                id: tempid,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }).then(async (response) => {
+                await swal("Good job!", "Add Question(s) Success!", "success");
+                history.push(`/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}`)
+            }).catch(error => {
+                console.log(error);
+            })
+        }
     }
 
     // const handleChangeEditor = (editor, index) => {
@@ -162,111 +280,115 @@ const AddPertanyaanDsn = () => {
     // }
 
     function addQuestionMulti() {
-        return questions.map((d, i) => (
-            <div key={i}>
-                <CRow>
-                    <CInputGroup className="mb-3">
-                        <CCol md="3">
-                            <CInputGroupText>Question {i + 1}</CInputGroupText>
-                        </CCol>
-                        <CCol>
-                            <CKEditor name="question" id={"question" + i}
-                                editor={ClassicEditor}
-                            // data={this.props.description}
-                            // onChange={(event, editor) => { handleChangeEditor(editor) }}
-                            />
-                        </CCol>
-                    </CInputGroup>
-                </CRow>
+        return Object.keys(questions).map((key) => {
+            return (
+                <div key={key}>
+                    <CRow>
+                        <CInputGroup className="mb-3">
+                            <CCol md="3">
+                                <CInputGroupText>Question {+key + 1}</CInputGroupText>
+                            </CCol>
+                            <CCol>
+                                <CInput
+                                    type="text"
+                                    placeholder="Alexa"
+                                    required
+                                    value={questions[key]["question"]} onChange={(e) => { handleChangeEditorMultiple(e, key) }}
+                                ></CInput>
+                            </CCol>
+                        </CInputGroup>
+                    </CRow>
 
-                <CRow>
-                    <CInputGroup className="mb-3">
-                        <CCol md="3">
-                            <CInputGroupText>Option A</CInputGroupText>
-                        </CCol>
-                        <CCol>
-                            <CInput
-                                type="text"
-                                placeholder="Alexa"
-                                required
-                            // defaultValue={kelas.kelas_name}
-                            ></CInput>
-                        </CCol>
-                    </CInputGroup>
-                </CRow>
+                    <CRow>
+                        <CInputGroup className="mb-3">
+                            <CCol md="3">
+                                <CInputGroupText>Option A</CInputGroupText>
+                            </CCol>
+                            <CCol>
+                                <CInput
+                                    type="text"
+                                    placeholder="Alexa"
+                                    required
+                                    value={questions[key]["option_A"]} onChange={(e) => { handleChangeEditorA(e, key) }}
+                                ></CInput>
+                            </CCol>
+                        </CInputGroup>
+                    </CRow>
 
-                <CRow>
-                    <CInputGroup className="mb-3">
-                        <CCol md="3">
-                            <CInputGroupText>Option B</CInputGroupText>
-                        </CCol>
-                        <CCol>
-                            <CInput
-                                type="text"
-                                placeholder="Alexa"
-                                required
-                            // defaultValue={kelas.kelas_name}
-                            ></CInput>
-                        </CCol>
-                    </CInputGroup>
-                </CRow>
+                    <CRow>
+                        <CInputGroup className="mb-3">
+                            <CCol md="3">
+                                <CInputGroupText>Option B</CInputGroupText>
+                            </CCol>
+                            <CCol>
+                                <CInput
+                                    type="text"
+                                    placeholder="Alexa"
+                                    required
+                                    value={questions[key]["option_B"]} onChange={(e) => { handleChangeEditorB(e, key) }}
+                                ></CInput>
+                            </CCol>
+                        </CInputGroup>
+                    </CRow>
 
-                <CRow>
-                    <CInputGroup className="mb-3">
-                        <CCol md="3">
-                            <CInputGroupText>Option C</CInputGroupText>
-                        </CCol>
-                        <CCol>
-                            <CInput
-                                type="text"
-                                placeholder="Alexa"
-                                required
-                            // defaultValue={kelas.kelas_name}
-                            ></CInput>
-                        </CCol>
-                    </CInputGroup>
-                </CRow>
+                    <CRow>
+                        <CInputGroup className="mb-3">
+                            <CCol md="3">
+                                <CInputGroupText>Option C</CInputGroupText>
+                            </CCol>
+                            <CCol>
+                                <CInput
+                                    type="text"
+                                    placeholder="Alexa"
+                                    required
+                                    value={questions[key]["option_C"]} onChange={(e) => { handleChangeEditorC(e, key) }}
+                                ></CInput>
+                            </CCol>
+                        </CInputGroup>
+                    </CRow>
 
-                <CRow>
-                    <CInputGroup className="mb-3">
-                        <CCol md="3">
-                            <CInputGroupText>Correct Answer</CInputGroupText>
-                        </CCol>
-                        <CCol>
-                            <CSelect custom name="select" id="select"
-                                // onChange={(event) => setSelected(event.target.value)}
-                                required
-                            >
-                                <option value="" hidden>Select Answers</option>
-                                {
-                                    options.map((d, i) => {
-                                        return (
-                                            <option key={i} value={d.var}>{d.type}</option>
-                                        )
-                                    })
-                                }
-                            </CSelect>
-                        </CCol>
-                    </CInputGroup>
-                </CRow>
-            </div>
-        ))
+                    <CRow>
+                        <CInputGroup className="mb-3">
+                            <CCol md="3">
+                                <CInputGroupText>Correct Answer</CInputGroupText>
+                            </CCol>
+                            <CCol>
+                                <CSelect custom name="select" id="select"
+                                    onChange={(e) => { handleChangeEditorCorrect(e, key) }}
+                                    required
+                                >
+                                    <option value="" hidden>Select Answers</option>
+                                    {
+                                        options.map((d, i) => {
+                                            return (
+                                                <option key={i} value={d.var}>{d.type}</option>
+                                            )
+                                        })
+                                    }
+                                </CSelect>
+                            </CCol>
+                        </CInputGroup>
+                    </CRow>
+                    <hr></hr>
+                </div>
+            );
+        })
     }
 
-    const getUserRole = () => {
-        api
-            .get('/user', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-            .then(response => {
-                setUserLog(response.data.userloggedin)
-            })
-            .catch(error => {
-                console.log(error);
-            })
-    }
+    // const getUserRole = () => {
+    //     api
+    //         .get('/user', {
+    //             headers: {
+    //                 Authorization: `Bearer ${token}`,
+    //             },
+    //         })
+    //         .then(response => {
+    //             setUserLog(response.data.userloggedin)
+    //         })
+    //         .catch(error => {
+    //             console.log(error);
+    //         })
+    // }
 
     const getDataKelas = () => {
         api
@@ -286,35 +408,32 @@ const AddPertanyaanDsn = () => {
             })
     }
 
-    const createQuestion = (event) => {
-        event.preventDefault();
-
-        api
-            .post('/pertanyaan',
-                {
-                    // pertanyaan: pertanyaan,
-                    // mahasiswa_id: userLog.mahasiswa_id,
-                    // minggukelas_id: weekid,
-                }
-                , {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
-            .then(async response => {
-                await swal("Good job!", "Add Question success!", "success");
-                // history.push(`/class/student-class-list/${classid}/${weekid}`)
-                // console.log(response);
-            })
-            .catch(error => {
-                console.log(error);
-            })
-    }
-
     useEffect(() => {
         getDataKelas()
-        getUserRole()
+        // getUserRole()
     }, [])
+
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: `Caution!`,
+            text: `Please review your question(s) before submitting!`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    addQuestion(event)
+                } else {
+                    await swal("Submit Question(s) Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
 
     // console.log(questType);
 
@@ -326,10 +445,10 @@ const AddPertanyaanDsn = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
+                                    <CCol md="10" xs="9">
                                         <h2>Add Question</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" className="text-right" xs="3">
                                         <CLink to={{ pathname: `/lecturer-class/lecturer-class-list/class-detail/${id}/${weekid}` }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>
@@ -339,8 +458,14 @@ const AddPertanyaanDsn = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => addQuestion(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
+                                    <CRow>
+                                        <CCol>
+                                            <span><h5>You can only submit question(s) once per week <text style={{ color: '#FF0000', }}>*</text></h5></span>
+                                        </CCol>
+                                    </CRow>
+                                    <br></br>
                                     <CRow>
                                         <CInputGroup className="mb-3">
                                             <CCol md="3">
@@ -367,7 +492,7 @@ const AddPertanyaanDsn = () => {
                                                     return (
                                                         <CFormGroup variant="checkbox" key={i}>
                                                             <CInputRadio className="form-check-input" id={i} name="radios" value={d.type}
-                                                                onChange={(event) => setQuestType(event.target.value)}
+                                                                onChange={(event) => { setQuestType(event.target.value) }}
                                                                 required />
                                                             <CLabel variant="checkbox" htmlFor={i}>{d.type}</CLabel>
                                                         </CFormGroup>
@@ -388,7 +513,7 @@ const AddPertanyaanDsn = () => {
                                                     minLength={1}
                                                     maxLength={2}
                                                     placeholder="Enter Number of Questions Here . . ."
-                                                    defaultValue={numberOfQuestions == 0 ? "" : numberOfQuestions}
+                                                    defaultValue={numberOfQuestions === 0 ? "" : numberOfQuestions}
                                                     onChange={onChangeNumberOfQuestions}
                                                 ></CInput>
                                             </CCol>

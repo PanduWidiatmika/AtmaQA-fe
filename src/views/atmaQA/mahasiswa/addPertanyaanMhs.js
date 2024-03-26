@@ -11,12 +11,7 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
-    CFormGroup,
-    CLabel,
-    CTextarea
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
@@ -77,7 +72,7 @@ const AddPertanyaanMhs = () => {
             .post('/pertanyaan',
                 {
                     pertanyaan: pertanyaan,
-                    mahasiswa_id: userLog.mahasiswa_id,
+                    mahasiswa_id: userLog.id,
                     minggukelas_id: weekid,
                 }
                 , {
@@ -88,7 +83,6 @@ const AddPertanyaanMhs = () => {
             .then(async response => {
                 await swal("Good job!", "Add Question success!", "success");
                 history.push(`/class/student-class-list/${classid}/${weekid}`)
-                // console.log(response);
             })
             .catch(error => {
                 console.log(error);
@@ -104,6 +98,33 @@ const AddPertanyaanMhs = () => {
         getUserRole()
     }, [])
 
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: "Create the following question?",
+            content: {
+                element: 'div',
+                attributes: {
+                    innerHTML: `${pertanyaan}`,
+                },
+            },
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    createQuestion(event)
+                } else {
+                    await swal("Create Lecturer Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
     return (
         <div>
             <CRow className="justify-content-center">
@@ -112,11 +133,11 @@ const AddPertanyaanMhs = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
+                                    <CCol md="10" xs="9">
                                         <h2>Add Question</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
-                                        <CLink to={{ pathname: `/class/student-class-list/${weekid}` }}>
+                                    <CCol md="2" xs="3" className="text-right">
+                                        <CLink to={{ pathname: `/class/student-class-list/${classid}/${weekid}` }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>
                                     </CCol>
@@ -125,7 +146,7 @@ const AddPertanyaanMhs = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => createQuestion(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
                                     <CRow>
                                         <CInputGroup className="mb-3">
@@ -149,14 +170,6 @@ const AddPertanyaanMhs = () => {
                                                 <CInputGroupText>Question</CInputGroupText>
                                             </CCol>
                                             <CCol xs="12" md="10">
-                                                {/* <CTextarea
-                                                    name="textarea-input"
-                                                    id="textarea-input"
-                                                    rows="9"
-                                                    placeholder="Type your question here..."
-                                                    required
-                                                    onChange={(event) => setPertanyaan(event.target.value)}
-                                                /> */}
                                                 <CKEditor name="description" id="description"
                                                     editor={ClassicEditor}
                                                     // data={this.props.description}
@@ -165,9 +178,24 @@ const AddPertanyaanMhs = () => {
                                             </CCol>
                                         </CInputGroup>
                                     </CRow>
+
+                                    <CRow>
+                                        <CInputGroup className="mb-3">
+                                            <CCol>
+                                                {
+                                                    userLog.stats === "0"
+                                                        ?
+                                                        <h4>You're asking as <b>Anonymous</b></h4>
+                                                        :
+                                                        <h4>You're asking as <b>{userLog.name}</b></h4>
+                                                }
+
+                                            </CCol>
+                                        </CInputGroup>
+                                    </CRow>
                                     <CRow className="text-center">
                                         <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
+                                            <CButton color="success" className="px-4" type="submit">
                                                 Create
                                             </CButton>
                                         </CCol>

@@ -11,20 +11,12 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
-    CFormGroup,
-    CLabel,
-    CTextarea
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
 import swal from 'sweetalert';
 import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
-import { Editor } from "react-draft-wysiwyg";
-import { EditorState, convertToRaw, ContentState } from 'draft-js';
-import { convertToHTML, convertFromHTML } from 'draft-convert';
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import './App.css'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -42,6 +34,8 @@ const PertanyaanMhsDetail = () => {
     })
 
     const history = useHistory();
+
+    const [loading, setLoading] = useState(true)
 
     const getUserRole = () => {
         api
@@ -88,6 +82,7 @@ const PertanyaanMhsDetail = () => {
                 })
             .then(response => {
                 setPertanyaan(response.data.question)
+                setLoading(false)
             })
             .catch(error => {
                 console.log(error);
@@ -124,52 +119,85 @@ const PertanyaanMhsDetail = () => {
         getPertanyaan()
     }, [])
 
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: "Update the following question?",
+            content: {
+                element: 'div',
+                attributes: {
+                    innerHTML: `${pertanyaan.pertanyaan_mhs}`,
+                },
+            },
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    updatePertanyaan(event)
+                } else {
+                    await swal("Create Lecturer Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
     return (
-        <div>
-            <CRow className="justify-content-center">
-                <CCol>
-                    <CCardGroup>
-                        <CCard>
-                            <CCardHeader>
-                                <CRow>
-                                    <CCol md="10">
-                                        <h2>Edit Question</h2>
-                                    </CCol>
-                                    <CCol md="2" className="text-right">
-                                        <CLink to={{ pathname: `/class/student-class-list/${classid}/${weekid}` }}>
-                                            <CButton color="danger">Back</CButton>
-                                        </CLink>
-                                    </CCol>
-                                </CRow>
-                            </CCardHeader>
+        <>
+            {
+                loading
+                    ?
+                    <h1>Loading...</h1>
+                    :
+                    <div>
+                        <CRow className="justify-content-center">
+                            <CCol>
+                                <CCardGroup>
+                                    <CCard>
+                                        <CCardHeader>
+                                            <CRow>
+                                                <CCol md="10" xs="9">
+                                                    <h2>Edit Question</h2>
+                                                </CCol>
+                                                <CCol md="2" xs="3" className="text-right">
+                                                    <CLink to={{ pathname: `/class/student-class-list/${classid}/${weekid}` }}>
+                                                        <CButton color="danger">Back</CButton>
+                                                    </CLink>
+                                                </CCol>
+                                            </CRow>
+                                        </CCardHeader>
 
-                            <CCardBody>
-                                <CForm method="post"
-                                    onSubmit={(event) => updatePertanyaan(event)}
-                                >
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Class Name</CInputGroupText>
-                                            </CCol>
-                                            <CCol>
-                                                <CInput
-                                                    type="text"
-                                                    placeholder="Alexa"
-                                                    disabled
-                                                    defaultValue={kelas.kelas_name}
-                                                ></CInput>
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
+                                        <CCardBody>
+                                            <CForm method="post"
+                                                onSubmit={(event) => confirmEditQuestion(event)}
+                                            >
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Class Name</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol>
+                                                            <CInput
+                                                                type="text"
+                                                                placeholder="Alexa"
+                                                                disabled
+                                                                defaultValue={kelas.kelas_name}
+                                                            ></CInput>
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
 
-                                    <CRow>
-                                        <CInputGroup className="mb-3">
-                                            <CCol md="2">
-                                                <CInputGroupText>Question</CInputGroupText>
-                                            </CCol>
-                                            <CCol xs="12" md="10">
-                                                {/* <CTextarea
+                                                <CRow>
+                                                    <CInputGroup className="mb-3">
+                                                        <CCol md="2">
+                                                            <CInputGroupText>Question</CInputGroupText>
+                                                        </CCol>
+                                                        <CCol xs="12" md="10">
+                                                            {/* <CTextarea
                                                     name="textarea-input"
                                                     id="textarea-input"
                                                     rows="9"
@@ -182,29 +210,31 @@ const PertanyaanMhsDetail = () => {
                                                         });
                                                     }}
                                                 /> */}
-                                                <CKEditor name="description" id="description"
-                                                    editor={ClassicEditor}
-                                                    data={pertanyaan.pertanyaan_mhs}
-                                                    onChange={(event, editor) => { handleChangeEditor(editor) }}
-                                                />
-                                            </CCol>
-                                        </CInputGroup>
-                                    </CRow>
+                                                            <CKEditor name="description" id="description"
+                                                                editor={ClassicEditor}
+                                                                data={pertanyaan.pertanyaan_mhs}
+                                                                onChange={(event, editor) => { handleChangeEditor(editor) }}
+                                                            />
+                                                        </CCol>
+                                                    </CInputGroup>
+                                                </CRow>
 
-                                    <CRow className="text-center">
-                                        <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
-                                                Update
-                                            </CButton>
-                                        </CCol>
-                                    </CRow>
-                                </CForm>
-                            </CCardBody>
-                        </CCard>
-                    </CCardGroup>
-                </CCol>
-            </CRow>
-        </div>
+                                                <CRow className="text-center">
+                                                    <CCol>
+                                                        <CButton color="primary" className="px-4" type="submit">
+                                                            Update
+                                                        </CButton>
+                                                    </CCol>
+                                                </CRow>
+                                            </CForm>
+                                        </CCardBody>
+                                    </CCard>
+                                </CCardGroup>
+                            </CCol>
+                        </CRow>
+                    </div>
+            }
+        </>
     )
 }
 

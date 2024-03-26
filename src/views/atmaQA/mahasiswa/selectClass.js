@@ -13,7 +13,6 @@ import {
     CInputGroupPrepend,
     CInputGroupText,
     CRow,
-    CCardImg,
     CSelect
 } from "@coreui/react";
 import CIcon from '@coreui/icons-react'
@@ -33,7 +32,7 @@ const SelectClass = () => {
 
     const history = useHistory();
 
-    console.log(selected);
+    // console.log(selected);
 
     const getUserRole = () => {
         api
@@ -61,35 +60,40 @@ const SelectClass = () => {
             },
         }).then(async response => {
             // console.log(selected);
-            console.log(response);
+            // console.log(response);
             if (password === response.data.kelas.password) {
-                // await api.post('/validate-enroll', {
-                //     kelas_id: selected,
-                //     mahasiswa_id: userLog.mahasiswa_id,
-                //     enroll_code: password,
-                // }, {
-                //     headers: {
-                //         Authorization: `Bearer ${token}`,
-                //     },
-                // }).then(async response => {
-                //     if (response.data.message == null) {
-                //         api.post('/set-enroll', {
-                //             kelas_id: selected,
-                //             mahasiswa_id: userLog.mahasiswa_id,
-                //             enroll_code: password,
-                //         }, {
-                //             headers: {
-                //                 Authorization: `Bearer ${token}`,
-                //             },
-                //         }).then(response => {
-                //             console.log(response);
-                //         })
-                //     } else {
-                //         console.log('okeh');
-                //     }
-                // })
-                await swal("Good job!", "Success!", "success");
-                history.push(`/class/student-class-list/${selected}`)
+                await api.post('/validate-enroll', {
+                    kelas_id: selected,
+                    mahasiswa_id: userLog.id,
+                    enroll_code: password,
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }).then(async response => {
+                    if (response.data.message == null) {
+                        api.post('/set-enroll', {
+                            kelas_id: selected,
+                            mahasiswa_id: userLog.id,
+                            enroll_code: password,
+                        }, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        }).then(async response => {
+                            // console.log(response);
+                            await swal("Good job!", "Success!", "success");
+                            history.push(`/class/student-class-list/${selected}`)
+                        }).catch(error => {
+                            console.log(error);
+                        })
+                    } else {
+                        // console.log('okeh');
+                        // await swal("Good job!", "Success!", "success");
+                        history.push(`/class/student-class-list/${selected}`)
+                    }
+                })
+
             } else if (password !== response.data.kelas.password) {
                 await swal("Alert!", "Password Incorrect!", "error");
             } else {
@@ -118,10 +122,9 @@ const SelectClass = () => {
         getUserRole()
     }, [])
 
-    // console.log(dataCourse);
 
     return (
-        <div className="c-app c-default-layout flex-row align-items-center">
+        <div className="c-default-layout flex-row align-items-center">
             <CContainer>
                 <CRow className="justify-content-center">
                     <CCol md="8">
@@ -141,12 +144,13 @@ const SelectClass = () => {
                                             <CSelect custom name="select" id="select"
                                                 onChange={(event) => setSelected(event.target.value)}
                                                 required
+                                                style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                                             >
                                                 <option value="" hidden>Select Course</option>
                                                 {
                                                     dataCourse.map((d, i) => {
                                                         return (
-                                                            <option key={i} value={d.kelas_id}>{d.kelas_name} - {d.hari} {d.sesi} - Mr/Ms. {d.lecturer_name} - Week {d.minggu_ke}</option>
+                                                            <option key={i} value={d.kelas_id}>{d.kelas_name} - {d.hari} {d.sesi} - Mr/Ms. {d.lecturer_name}</option>
                                                         )
                                                     })
                                                 }

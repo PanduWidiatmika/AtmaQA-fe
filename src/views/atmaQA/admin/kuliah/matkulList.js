@@ -7,19 +7,9 @@ import {
     CCol,
     CRow,
     CTooltip,
-    CModal,
-    CModalBody,
-    CModalFooter,
-    CModalHeader,
-    CModalTitle,
     CButton,
-    CLabel,
-    CForm,
-    CFormGroup,
-    CFormText,
     CInput,
     CInputGroup,
-    CInputGroupPrepend,
     CInputGroupAppend,
 } from "@coreui/react";
 import React, { useEffect, useState } from "react";
@@ -34,6 +24,8 @@ const MatKulList = () => {
 
     const history = useHistory();
 
+    const [loading, setLoading] = useState(true)
+
     const token = localStorage.getItem('token');
 
     const getData = () => {
@@ -45,6 +37,7 @@ const MatKulList = () => {
             })
             .then(response => {
                 setData(response.data.matkul)
+                setLoading(false)
             })
             .catch(error => {
                 console.log(error);
@@ -74,74 +67,112 @@ const MatKulList = () => {
         getData()
     }, [])
 
-    return (
-        <div>
-            <CCard>
-                <CCardHeader>
-                    <CRow>
-                        <CCol md="11">
-                            <h3><b>Course</b></h3>
-                        </CCol>
-                        <CCol></CCol>
-                    </CRow>
-                    <CRow>
-                        <CCol md="4">
-                            <CInputGroup>
-                                <CInput type="text" id="search" name="search" placeholder="Type to search by course name ..."
-                                    onChange={(event) => searchMatkul(event)}
-                                />
-                                <CInputGroupAppend>
-                                    <CTooltip content={`Search`} placement={`top`}>
-                                        <CButton className="btn-sm" type="submit" style={{ backgroundColor: "blue" }}><CIcon name="cil-magnifying-glass"
-                                            style={{ color: "white" }}></CIcon></CButton>
-                                    </CTooltip>
-                                </CInputGroupAppend>
-                            </CInputGroup>
-                        </CCol>
-                        <CCol></CCol>
-                        <CCol md="1">
-                            <CTooltip
-                                content="Add Course"
-                                placement="top"
-                            >
-                                <CButton
-                                    className="card-header-action"
-                                    onClick={() => { history.push('/course/course-list/add-course') }}>
-                                    <CIcon content={freeSet.cilPlus} />
-                                </CButton>
-                            </CTooltip>
-                        </CCol>
-                    </CRow>
-                </CCardHeader>
-                <CCardBody>
-                    {
-                        data == null ?
-                            <div>
-                                No Data Found
-                            </div>
+    const deleteQuestion = (id, name) => {
+        swal({
+            title: "Confirm Delete!",
+            text: `Confirm delete for ${name}`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    api
+                        .post("/delete-course", {
+                            id: id
+                        }, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        })
+                        .then(async (response) => {
+                            await swal({ icon: "success", text: 'Course Deleted!' });
+                            window.location.reload();
+                        });
+                } else {
+                    await swal("Delete Course Cancelled!");
+                    window.location.reload();
+                }
+            })
+            .catch((err) => {
+                console.log("error");
+            });
+    }
 
-                            :
-                            <CDataTable
-                                items={data}
-                                fields={[
-                                    { key: "No" },
-                                    { key: "matkul_name" },
-                                    { key: "dosen_name" },
-                                    { key: "action" },
-                                ]}
-                                hover
-                                bordered
-                                size="sm"
-                                itemsPerPage={4}
-                                pagination
-                                scopedSlots={{
-                                    No: (item, i) => <td>{i + 1}</td>,
-                                    // course_Name: (item) => <td>{item.matkul_name}</td>,
-                                    // lecture_Name: (item) => <td>{item.dosen_name}</td>,
-                                    'action':
-                                        (item) => (
-                                            <td>
-                                                {/* <CTooltip
+    return (
+        <>
+            {
+                loading
+                    ?
+                    <h1>Loading...</h1>
+                    :
+                    <div>
+                        <CCard>
+                            <CCardHeader>
+                                <CRow>
+                                    <CCol md="11">
+                                        <h3><b>Course</b></h3>
+                                    </CCol>
+                                    <CCol></CCol>
+                                </CRow>
+                                <CRow>
+                                    <CCol md="4" xs="8">
+                                        <CInputGroup>
+                                            <CInput type="text" id="search" name="search" placeholder="Type to search by course name ..."
+                                                onChange={(event) => searchMatkul(event)}
+                                            />
+                                            <CInputGroupAppend>
+                                                <CTooltip content={`Search`} placement={`top`}>
+                                                    <CButton className="btn-sm" type="submit" style={{ backgroundColor: "#3c4b64" }}><CIcon name="cil-magnifying-glass"
+                                                        style={{ color: "white" }}></CIcon></CButton>
+                                                </CTooltip>
+                                            </CInputGroupAppend>
+                                        </CInputGroup>
+                                    </CCol>
+                                    <CCol></CCol>
+                                    <CCol md="1" xs="2">
+                                        <CTooltip
+                                            content="Add Course"
+                                            placement="top"
+                                        >
+                                            <CButton
+                                                className="card-header-action"
+                                                onClick={() => { history.push('/course/course-list/add-course') }}>
+                                                <CIcon content={freeSet.cilPlus} />
+                                            </CButton>
+                                        </CTooltip>
+                                    </CCol>
+                                </CRow>
+                            </CCardHeader>
+                            <CCardBody>
+                                {
+                                    data == null ?
+                                        <div>
+                                            No Data Found
+                                        </div>
+
+                                        :
+                                        <CDataTable
+                                            items={data}
+                                            fields={[
+                                                { key: "No" },
+                                                { key: "Course_Name" },
+                                                { key: "Lecturer_Name" },
+                                                { key: "action" },
+                                            ]}
+                                            hover
+                                            bordered
+                                            size="sm"
+                                            itemsPerPage={10}
+                                            pagination
+                                            scopedSlots={{
+                                                No: (item, i) => <td>{i + 1}</td>,
+                                                Course_Name: (item) => <td>{item.matkul_name}</td>,
+                                                Lecturer_Name: (item) => <td>{item.dosen_name}</td>,
+                                                'action':
+                                                    (item) => (
+                                                        <td>
+                                                            {/* <CTooltip
                                                     content="Dosen Detail"
                                                     placement="top"
                                                 >
@@ -151,35 +182,39 @@ const MatKulList = () => {
                                                         <CIcon content={freeSet.cilNewspaper} />
                                                     </CLink>
                                                 </CTooltip> */}
-                                                <CTooltip
-                                                    content="Update Course"
-                                                    placement="top"
-                                                >
-                                                    <CLink
-                                                        className="card-header-action"
-                                                        to={{ pathname: `/course/course-list/edit-course/${item.matkul_id}` }}>
-                                                        <CIcon content={freeSet.cilPencil} />
-                                                    </CLink>
-                                                </CTooltip>
-                                                {/* <CTooltip
-                                            content="Delete Mahasiswa"
-                                            placement="top"
-                                        >
-                                            <CLink
-                                                className="card-header-action"
-                                            >
-                                                <CIcon content={freeSet.cilTrash} />
-                                            </CLink>
-                                        </CTooltip> */}
-                                            </td>
-                                        )
-                                }}
-                            />
-                    }
+                                                            <CTooltip
+                                                                content="Update Course"
+                                                                placement="top"
+                                                            >
+                                                                <CLink
+                                                                    className="card-header-action"
+                                                                    to={{ pathname: `/course/course-list/edit-course/${item.matkul_id}` }}>
+                                                                    <CIcon content={freeSet.cilPencil} />
+                                                                </CLink>
+                                                            </CTooltip>
+                                                            <CTooltip
+                                                                content="Delete Course"
+                                                                placement="top"
+                                                            >
+                                                                <CLink
+                                                                    className="card-header-action"
+                                                                >
+                                                                    <CIcon content={freeSet.cilTrash}
+                                                                        onClick={(event) => deleteQuestion(item.matkul_id, item.matkul_name)}
+                                                                    />
+                                                                </CLink>
+                                                            </CTooltip>
+                                                        </td>
+                                                    )
+                                            }}
+                                        />
+                                }
 
-                </CCardBody>
-            </CCard>
-        </div>
+                            </CCardBody>
+                        </CCard>
+                    </div>
+            }
+        </>
     )
 }
 

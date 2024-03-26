@@ -11,9 +11,9 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
+    // CInputGroupPrepend,
     CCardGroup,
-    CContainer,
+    // CContainer,
     CSelect,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
@@ -161,6 +161,51 @@ const EditKelas = () => {
         getAllCourse();
     }, [id])
 
+    useEffect(() => {
+        getCourse()
+    }, [matkul.matkul_id])
+
+    const [oneCourse, setOneCourse] = useState('')
+    const [oneDosen, setOneDosen] = useState('')
+
+    const getCourse = () => {
+        api
+            .get(`/matkul/${matkul.matkul_id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+            .then(response => {
+                setOneCourse(response.data.matkul)
+                setOneDosen(response.data.dosen)
+            })
+            .catch(error => {
+                console.log(error);
+            })
+    }
+
+    const confirmEditQuestion = (event) => {
+        event.preventDefault();
+
+        swal({
+            title: "Confirm edit for:",
+            text: `Name: ${data.kelas_name}\nCourse: ${oneCourse.matkul_name}\nLecturer: ${oneDosen.dosen_name}\nSchedule: ${data.hari} - ${data.sesi}`,
+            icon: "warning",
+            buttons: true,
+            dangerMode: false,
+        })
+            .then(async (willDelete) => {
+                if (willDelete) {
+                    updateKelas(event)
+                } else {
+                    await swal("Edit Class Cancelled!");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
     return (
         <div>
             <CRow className="justify-content-center">
@@ -182,7 +227,7 @@ const EditKelas = () => {
 
                             <CCardBody>
                                 <CForm method="post"
-                                    onSubmit={(event) => updateKelas(event)}
+                                    onSubmit={(event) => confirmEditQuestion(event)}
                                 >
                                     <CRow>
                                         <CInputGroup className="mb-3">
@@ -274,7 +319,7 @@ const EditKelas = () => {
 
                                     <CRow className="text-center">
                                         <CCol>
-                                            <CButton color="primary" className="px-4" type="submit">
+                                            <CButton color="success" className="px-4" type="submit">
                                                 Update
                                             </CButton>
                                         </CCol>

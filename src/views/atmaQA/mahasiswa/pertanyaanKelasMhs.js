@@ -7,13 +7,12 @@ import {
     CCol,
     CRow,
     CTooltip,
-    CModal,
-    CModalBody,
-    CModalFooter,
-    CModalHeader,
-    CModalTitle,
     CButton,
     CBadge,
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem,
 } from "@coreui/react";
 import React, { useEffect, useState } from "react";
 import CIcon from '@coreui/icons-react'
@@ -22,6 +21,8 @@ import { api } from "src/plugins/api";
 import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
 import swal from 'sweetalert';
 import parse from 'html-react-parser';
+import './detailContainer.css'
+
 
 const PertanyaanKelasMhs = () => {
 
@@ -34,7 +35,13 @@ const PertanyaanKelasMhs = () => {
 
     const { classid, weekid } = useParams();
 
+    const [week, setWeek] = useState([]);
+
     const [pertanyaan, setPertanyaan] = useState([])
+
+    const [pinned, setPinned] = useState([])
+
+    const [loading, setLoading] = useState(true)
 
     const getDataKelas = () => {
         api
@@ -93,7 +100,7 @@ const PertanyaanKelasMhs = () => {
 
         api
             .post(`/index-pertanyaan`, {
-                mahasiswa_id: userLog.mahasiswa_id,
+                mahasiswa_id: userLog.id,
                 minggukelas_id: weekid,
             }
                 , {
@@ -103,16 +110,47 @@ const PertanyaanKelasMhs = () => {
                 })
             .then(response => {
                 setPertanyaan(response.data.question)
+                setLoading(false)
             })
             .catch(error => {
                 console.log(error);
             })
     }
 
-    const deleteQuestion = (id) => {
+    const getPinned = () => {
+        // event.preventDefault()
+
+        api
+            .post(`/show-shown`, {
+                minggukelas_id: weekid,
+            }
+                , {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+            .then(response => {
+                // console.log(response);
+                if (response.data == "") {
+                    setPinned(null)
+                } else {
+                    setPinned(response.data.question)
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            })
+    }
+
+    const deleteQuestion = (id, pty) => {
         swal({
-            title: "Warning",
-            text: "Deleted question cannot be restored!",
+            title: "Delete the following question?",
+            content: {
+                element: 'div',
+                attributes: {
+                    innerHTML: `${pty}`,
+                },
+            },
             icon: "warning",
             buttons: true,
             dangerMode: true,
@@ -133,7 +171,7 @@ const PertanyaanKelasMhs = () => {
                         });
                 } else {
                     await swal("Delete Question Cancelled!");
-                    window.location.reload();
+                    // window.location.reload();
                 }
             })
             .catch((err) => {
@@ -142,141 +180,282 @@ const PertanyaanKelasMhs = () => {
     }
 
     useEffect(() => {
+        api
+            .post(`/getOne-week`, {
+                weekid: weekid
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+            .then(response => {
+                setWeek(response.data.week)
+                // setLoading(false)
+            })
+            .catch(error => {
+                console.log(error);
+            })
+
         getDataKelas()
         getUserRole()
-    }, [])
+        getPinned()
+    }, [weekid])
 
     useEffect(() => {
         getPertanyaanMhs()
     }, [userLog.id])
 
     return (
-        <div>
-            <CCard>
-                <CCardHeader>
-                    <CRow>
-                        <CCol md="9">
-                            <h4><b>{kelas.kelas_name} - Week {weekid}</b></h4>
-                        </CCol>
-                        <CCol></CCol>
-                        <CCol md="2" className="text-right">
-                            <CLink to={{ pathname: `/class/student-class-list/${classid}` }}>
-                                <CButton color="danger">Back</CButton>
-                            </CLink>
-                        </CCol>
-                    </CRow>
-                    <CRow>
-                        <br></br>
-                    </CRow>
-                    <CRow>
-                        <CCol md="4">
-                        </CCol>
-                        <CCol></CCol>
-                        <CCol md="1">
-                            <CTooltip
-                                content="Add Questions"
-                                placement="top"
-                            >
-                                <CButton
-                                    className="card-header-action"
-                                    onClick={() => { history.push(`/class/student-class-list/${classid}/${weekid}/add-student-question`) }}>
-                                    <CIcon content={freeSet.cilPlus} />
-                                </CButton>
-                            </CTooltip>
-                        </CCol>
-                    </CRow>
-                </CCardHeader>
-                <CCardBody>
-                    {
-                        pertanyaan == null ?
-                            <div>
-                                No Data Found
-                            </div>
-                            :
-                            <CDataTable
-                                items={pertanyaan}
-                                fields={[
-                                    { key: "No" },
-                                    { key: "Question" },
-                                    { key: "Status" },
-                                    { key: "Action" },
-                                ]}
-                                hover
-                                bordered
-                                size="sm"
-                                itemsPerPage={4}
-                                pagination
-                                scopedSlots={{
-                                    No: (item, i) => <td>{i + 1}</td>,
-                                    Question: (item) => <td>
-                                        {
-                                            console.log(parse(item.question))
-                                        }
-                                        {
-                                            // item.question.length > 25 ? `${parse(item.question).substring(0, 25)}...`
-                                            //     :
-                                            parse(item.question)
-                                        }
-                                    </td>,
-                                    Status: (item) => <td>{
-                                        item.jawaban_dosen == null ? <CBadge color="danger">Unanswered</CBadge> : <CBadge color="success">Answered</CBadge>
-                                    }</td>,
-                                    'Action':
-                                        (item) => (
-                                            <td>
-                                                <CTooltip
-                                                    content="Question Detail"
-                                                    placement="top"
-                                                >
-                                                    <CLink
-                                                        className="card-header-action"
-                                                        to={{ pathname: `/class/student-class-list/${classid}/${weekid}/question-detail/${item.pertanyaanmhs_id}` }}>
-                                                        <CIcon content={freeSet.cilNewspaper} />
-                                                    </CLink>
-                                                </CTooltip>
-                                                <CTooltip
-                                                    content="Update Question"
-                                                    placement="top"
-                                                >
-                                                    {
-                                                        item.jawaban_dosen == null ?
-                                                            <CLink
-                                                                className="card-header-action"
-                                                                to={{ pathname: `/class/student-class-list/${classid}/${weekid}/edit-question/${item.pertanyaanmhs_id}` }}>
-                                                                <CIcon content={freeSet.cilPencil} />
-                                                            </CLink>
-                                                            :
-                                                            <></>
-                                                    }
+        <>
+            {
+                loading
+                    ?
+                    <h1>Loading...</h1>
+                    :
+                    <div>
+                        <CCard>
+                            <CCardHeader>
+                                <CRow>
+                                    <CCol md="10" xs="9">
+                                        <h2>{kelas.kelas_name} - Week {week.week}</h2>
+                                    </CCol>
+                                    <CCol md="2" xs="3" className="text-right">
+                                        <CLink to={{ pathname: `/class/student-class-list/${classid}` }}>
+                                            <CButton color="danger">Back</CButton>
+                                        </CLink>
+                                    </CCol>
+                                </CRow>
+                                <CRow>
+                                    <br></br>
+                                </CRow>
+                            </CCardHeader>
+                            {
+                                pinned == null
+                                    ?
+                                    <></>
+                                    :
+                                    <>
+                                        <CCardHeader>
+                                            <CRow>
+                                                <CCol md="10" xs="9">
+                                                    <h4>Pinned Questions</h4>
+                                                </CCol>
+                                            </CRow>
+                                        </CCardHeader>
+                                        <CCardBody>
+                                            {
+                                                pinned == null ?
+                                                    <div>
+                                                        No Data Found
+                                                    </div>
+                                                    :
+                                                    <CDataTable
+                                                        items={pinned}
+                                                        fields={[
+                                                            { key: "No" },
+                                                            { key: "Question" },
+                                                            { key: "Status" },
+                                                            { key: "Action" },
+                                                        ]}
+                                                        hover
+                                                        bordered
+                                                        size="sm"
+                                                        itemsPerPage={4}
+                                                        pagination
+                                                        scopedSlots={{
+                                                            No: (item, i) => <td>{i + 1}</td>,
+                                                            Question: (item) => <td>
+                                                                {
+                                                                    // console.log(parse(item.question))
+                                                                }
+                                                                {
+                                                                    // item.question.length > 25 ? `${parse(item.question).substring(0, 25)}...`
+                                                                    //     :
+                                                                    parse(item.question)
+                                                                }
+                                                            </td>,
+                                                            Status: (item) => <td>{
+                                                                item.jawaban_dosen == null ? <CBadge color="danger">Unanswered</CBadge> : <CBadge color="success">Answered</CBadge>
+                                                            }</td>,
+                                                            'Action':
+                                                                (item) => (
+                                                                    <td>
+                                                                        <CDropdown
 
-                                                </CTooltip>
-                                                <CTooltip
-                                                    content="Delete Question"
-                                                    placement="top"
-                                                >
+                                                                            className="c-header-nav-items mx-2"
+                                                                            direction="center"
+                                                                        >
+                                                                            <CDropdownToggle className="c-header-nav-link" caret={false}>
+
+                                                                                <CTooltip
+                                                                                    content="Details"
+                                                                                    placement="top"
+                                                                                >
+                                                                                    <CLink
+                                                                                        className="card-header-action"
+                                                                                    >
+                                                                                        <CIcon content={freeSet.cilOptions}
+                                                                                        />
+                                                                                    </CLink>
+                                                                                </CTooltip>
+
+                                                                            </CDropdownToggle>
+                                                                            <CDropdownMenu className="pt-0"
+                                                                                placement="left"
+                                                                            >
+                                                                                <CDropdownItem>
+                                                                                    <CLink
+                                                                                        className="card-header-action"
+                                                                                        to={{ pathname: `/class/student-class-list/${classid}/${weekid}/pinned-question-detail/${item.pertanyaanmhs_id}` }}>
+                                                                                        <CIcon content={freeSet.cilNewspaper} className="mfe-2" />
+                                                                                        Question Detail
+                                                                                    </CLink>
+                                                                                </CDropdownItem>
+                                                                            </CDropdownMenu>
+                                                                        </CDropdown>
+                                                                    </td>
+                                                                )
+                                                        }}
+                                                    />
+                                            }
+
+                                        </CCardBody>
+                                    </>
+                            }
+
+                            <CCardHeader>
+                                <CRow>
+                                    <CCol md="10" xs="9">
+                                        <h4>Your Questions</h4>
+                                    </CCol>
+                                    <CCol className="text-right" md="2" xs="3">
+                                        <CTooltip
+                                            content="Add Questions"
+                                            placement="top"
+
+                                        >
+                                            <CButton
+                                                className="card-header-action"
+                                                style={{ backgroundColor: '#3c4b64' }}
+                                                onClick={() => { history.push(`/class/student-class-list/${classid}/${weekid}/add-student-question`) }}>
+                                                <CIcon content={freeSet.cilPlus} style={{ color: 'white' }} />
+                                            </CButton>
+                                        </CTooltip>
+                                    </CCol>
+                                </CRow>
+                            </CCardHeader>
+                            <CCardBody>
+                                {
+                                    pertanyaan == null ?
+                                        <div>
+                                            No Data Found
+                                        </div>
+                                        :
+                                        <CDataTable
+                                            items={pertanyaan}
+                                            fields={[
+                                                { key: "No" },
+                                                { key: "Question" },
+                                                { key: "Status" },
+                                                { key: "Action" },
+                                            ]}
+                                            hover
+                                            bordered
+                                            size="sm"
+                                            itemsPerPage={4}
+                                            pagination
+                                            scopedSlots={{
+                                                No: (item, i) => <td>{i + 1}</td>,
+                                                Question: (item) => <td>
                                                     {
-                                                        item.jawaban_dosen == null ?
-                                                            <CLink
-                                                                className="card-header-action"
+                                                        // console.log(parse(item.question))
+                                                    }
+                                                    {
+                                                        // item.question.length > 25 ? `${parse(item.question).substring(0, 25)}...`
+                                                        //     :
+                                                        parse(item.question)
+                                                    }
+                                                </td>,
+                                                Status: (item) => <td>{
+                                                    item.jawaban_dosen == null ? <CBadge color="danger">Unanswered</CBadge> : <CBadge color="success">Answered</CBadge>
+                                                }</td>,
+                                                'Action':
+                                                    (item) => (
+                                                        <td>
+                                                            <CDropdown
+
+                                                                className="c-header-nav-items mx-2"
+                                                                direction="center"
                                                             >
-                                                                <CIcon content={freeSet.cilTrash}
-                                                                    onClick={(event) => deleteQuestion(item.pertanyaanmhs_id)}
-                                                                />
-                                                            </CLink>
-                                                            :
-                                                            <></>
-                                                    }
+                                                                <CDropdownToggle className="c-header-nav-link" caret={false}>
 
-                                                </CTooltip>
-                                            </td>
-                                        )
-                                }}
-                            />
-                    }
+                                                                    <CTooltip
+                                                                        content="Details"
+                                                                        placement="top"
+                                                                    >
+                                                                        <CLink
+                                                                            className="card-header-action"
+                                                                        >
+                                                                            <CIcon content={freeSet.cilOptions}
+                                                                            />
+                                                                        </CLink>
+                                                                    </CTooltip>
 
-                </CCardBody>
-            </CCard>
-        </div >
+                                                                </CDropdownToggle>
+                                                                <CDropdownMenu className="pt-0"
+                                                                    placement="left"
+                                                                >
+                                                                    <CDropdownItem>
+                                                                        <CLink
+                                                                            className="card-header-action"
+                                                                            to={{ pathname: `/class/student-class-list/${classid}/${weekid}/question-detail/${item.pertanyaanmhs_id}` }}>
+                                                                            <CIcon content={freeSet.cilNewspaper} className="mfe-2" />
+                                                                            Question Detail
+                                                                        </CLink>
+                                                                    </CDropdownItem>
+
+                                                                    {
+                                                                        item.jawaban_dosen == null ?
+                                                                            <>
+                                                                                <CDropdownItem>
+                                                                                    <CLink
+                                                                                        className="card-header-action"
+                                                                                        to={{ pathname: `/class/student-class-list/${classid}/${weekid}/edit-question/${item.pertanyaanmhs_id}` }}>
+                                                                                        <CIcon content={freeSet.cilPencil} className="mfe-2" />
+                                                                                        Update Question
+                                                                                    </CLink>
+                                                                                </CDropdownItem>
+                                                                                <CDropdownItem>
+                                                                                    <CLink
+                                                                                        className="card-header-action"
+                                                                                        onClick={(event) => deleteQuestion(item.pertanyaanmhs_id, item.question)}
+                                                                                    >
+                                                                                        <CIcon content={freeSet.cilTrash}
+                                                                                            className="mfe-2"
+                                                                                        />
+                                                                                        Delete Question
+                                                                                    </CLink>
+                                                                                </CDropdownItem>
+                                                                            </>
+
+                                                                            :
+                                                                            <></>
+                                                                    }
+
+
+                                                                </CDropdownMenu>
+                                                            </CDropdown>
+                                                        </td>
+                                                    )
+                                            }}
+                                        />
+                                }
+
+                            </CCardBody>
+                        </CCard>
+                    </div >
+            }
+        </>
     )
 }
 

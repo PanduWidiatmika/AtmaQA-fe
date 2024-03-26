@@ -11,14 +11,12 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
-import swal from 'sweetalert';
-import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
+// import swal from 'sweetalert';
+import { useParams } from "react-router-dom/cjs/react-router-dom.min";
 
 const MahasiswaDetail = () => {
     const token = localStorage.getItem('token');
@@ -28,7 +26,7 @@ const MahasiswaDetail = () => {
         npm: '',
         email_mahasiswa: '',
     })
-    const history = useHistory();
+    // const history = useHistory();
 
     const { id } = useParams();
 
@@ -59,10 +57,10 @@ const MahasiswaDetail = () => {
                         <CCard>
                             <CCardHeader>
                                 <CRow>
-                                    <CCol md="10">
-                                        <h2>Mahasiswa Detail</h2>
+                                    <CCol md="10" xs="9">
+                                        <h2>Student Detail</h2>
                                     </CCol>
-                                    <CCol md="2" className="text-right">
+                                    <CCol md="2" xs="3" className="text-right">
                                         <CLink to={{ pathname: "/mahasiswa/mahasiswa-list" }}>
                                             <CButton color="danger">Back</CButton>
                                         </CLink>

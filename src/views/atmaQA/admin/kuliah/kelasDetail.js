@@ -11,14 +11,12 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
 } from "@coreui/react";
 import { useState, useEffect } from "react";
 import { api } from "src/plugins/api";
-import swal from 'sweetalert';
-import { useHistory, useParams } from "react-router-dom/cjs/react-router-dom.min";
+// import swal from 'sweetalert';
+import { useParams } from "react-router-dom/cjs/react-router-dom.min";
 
 const KelasDetail = () => {
     const token = localStorage.getItem('token');

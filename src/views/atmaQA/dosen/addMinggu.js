@@ -11,9 +11,7 @@ import {
     CInputGroup,
     CInput,
     CInputGroupText,
-    CInputGroupPrepend,
     CCardGroup,
-    CContainer,
     CLabel,
     CFormGroup,
     CInputRadio,
@@ -152,7 +150,7 @@ const AddMinggu = () => {
         getData();
     }, [id])
 
-    console.log(minggu);
+    // console.log(minggu);
 
     return (
         <div>
